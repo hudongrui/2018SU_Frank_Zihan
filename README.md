@@ -1,5 +1,3 @@
-2018SU_Frank_Zihan
-
 # Grasp Detector
 
 Code to detect planar grasps using the model learnt in 
