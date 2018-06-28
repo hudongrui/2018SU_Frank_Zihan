@@ -1,0 +1,702 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"write",
+				"writerow"
+			],
+			[
+				"audio_file",
+				"audio_file_name\tstatement"
+			],
+			[
+				"audio",
+				"audio_file\tstatement"
+			],
+			[
+				"spa",
+				"spamwriter\tstatement"
+			],
+			[
+				"cs",
+				"csvfile\tstatement"
+			],
+			[
+				"ten",
+				"tensorflow\tmodule"
+			],
+			[
+				"glo",
+				"global_variables_initializer\tfunction"
+			],
+			[
+				"multi",
+				"multiply\tfunction"
+			],
+			[
+				"mu",
+				"multiply\tfunction"
+			],
+			[
+				"initialize_a",
+				"initialize_all_variables\tfunction"
+			],
+			[
+				"r",
+				"run\tfunction"
+			],
+			[
+				"te",
+				"tensorflow-gpu"
+			],
+			[
+				"squi",
+				"squiggly_underline"
+			],
+			[
+				"sti",
+				"stippled_underline"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"contents": "Package Control Messages\n========================\n\nAnaconda\n--------\n\n  \n  \n                                                            |\n                _` |  __ \\    _` |   __|   _ \\   __ \\    _` |   _` |\n               (   |  |   |  (   |  (     (   |  |   |  (   |  (   |\n              \\__,_| _|  _| \\__,_| \\___| \\___/  _|  _| \\__,_| \\__,_|\n  \n                                       The Sublime Text 3 Python IDE\n  \n  \n  Welcome to anaconda, the Sublime Text 3 Python IDE. We hope you enjoy it :)\n  \n  Anaconda works fine out of the box but you can configure it to totally adapt\n  it to your needs or style.\n  \n  For a complete guide of use and configuration take a look at:\n  \n  \thttp://damnwidget.github.io/anaconda/\n  \n  Please, consider donating to maintain this project alive:\n  \n  \thttps://pledgie.com/campaigns/32230\n\n\nAnaconda\n--------\n\n  \n                                                            |\n                _` |  __ \\    _` |   __|   _ \\   __ \\    _` |   _` |\n               (   |  |   |  (   |  (     (   |  |   |  (   |  (   |\n              \\__,_| _|  _| \\__,_| \\___| \\___/  _|  _| \\__,_| \\__,_|\n                                       The Sublime Text 3 Python IDE\n  \n  \n  Anaconda v2.1.25\n  ================\n  \n  Welcome to new anaconda v2.1.25, what can do you find in this minor release?\n  \n  ## Fixes\n      - Fixed exception on helper library due non existent variable reference\n      - Now test commands also works when caret is on comments and/or strings\n",
+			"settings":
+			{
+				"buffer_size": 1486,
+				"line_ending": "Unix",
+				"name": "Package Control Messages",
+				"read_only": true,
+				"scratch": true
+			}
+		},
+		{
+			"file": "testing.py",
+			"settings":
+			{
+				"buffer_size": 659,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/team18/NLP/ExecutionFile/client.py",
+			"settings":
+			{
+				"buffer_size": 4212,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "#!/usr/bin/python3\n\nimport cv2\nimport numpy as np\nimport datetime\n\n<<<<<<< HEAD\n#class ObjectRecognition:\ndef detect_objects():\n    # take picture from webcam\n    now = datetime.datetime.now()\n    file_name = now.strftime(\"%Y-%m-%d\")\n    img = cv2.imread(str(take_picture(file_name)), 1)\n\n    img=cv2.resize(img, (340, 220))\n    imgHSV= cv2.cvtColor(img, cv2.COLOR_BGR2HSV)\n\n    # Find the red apple\n    lower_range_apple = np.array([10, 150, 70], dtype=np.uint8)\n    upper_range_apple = np.array([179, 255, 100], dtype=np.uint8)\n    red = [30, 30, 200]\n    # Find the orange\n    lower_range_orange = np.array([0, 160, 125], dtype=np.uint8)\n    upper_range_orange = np.array([100, 255, 150], dtype=np.uint8)\n    orange = [40, 127, 255]\n    # Find the banana\n    lower_range_banana = np.array([20, 100, 150], dtype=np.uint8)\n    upper_range_banana = np.array([40, 200, 255], dtype=np.uint8)\n    yellow = [0, 240, 255]\n    # Find the pear\n    lower_range_pear = np.array([40, 70, 100], dtype=np.uint8)\n    upper_range_pear = np.array([50, 200, 255], dtype=np.uint8)\n    green = [74, 111, 55]\n\n    # Draw box around the element\n    center_of_apple = find_element_within_range(img, imgHSV, lower_range_apple, upper_range_apple,red)\n    # cv2.imshow('image', img)\n    # cv2.waitKey(0)\n    #\n    center_of_orange = find_element_within_range(img, imgHSV, lower_range_orange, upper_range_orange, orange)\n    # cv2.imshow('image', img)\n    # cv2.waitKey(0)\n    #\n    center_of_banana = find_element_within_range(img, imgHSV, lower_range_banana, upper_range_banana, yellow)\n    # cv2.imshow('image', img)\n    # cv2.waitKey(0)\n    center_of_pear = find_element_within_range(img, imgHSV, lower_range_pear, upper_range_pear, green)\n\n    print(center_of_apple, center_of_banana, center_of_orange, center_of_pear)\n    cv2.imshow('image', img)\n    cv2.waitKey(0)\n    return 0\n\n\ndef find_element_within_range(image, imgHSV, lower_range, upper_range, color):\n    mask = cv2.inRange(imgHSV, lower_range, upper_range)\n\n    cv2.imshow('mask',mask)\n    cv2.waitKey(0)\n\n    element = cv2.getStructuringElement(cv2.MORPH_RECT,(1,1))\n    mask = cv2.erode(mask,element, iterations=2)\n    mask = cv2.dilate(mask,element,iterations=2)\n    mask = cv2.erode(mask,element)\n\n    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\n    maximumArea = 0\n    bestContour = None\n    for contour in contours:\n        currentArea = cv2.contourArea(contour)\n        if currentArea > maximumArea:\n            bestContour = contour\n            maximumArea = currentArea\n    #Create a bounding box around the biggest red object\n    x,y,w,h = (0, 0, 0, 0)\n\n    if bestContour is not None:\n        x,y,w,h = cv2.boundingRect(bestContour)\n        cv2.rectangle(image, (x,y),(x+w,y+h), color, 3)\n\n    if x != 0:\n        cv2.circle(image,(x+w/2,y+h/2),3,3)\n        center = (x+w/2,y+h/2)\n    else:\n        center = 0\n\n    return center\n\ndef take_picture(file_name):\n    # Camera 0 is the camera on the arm\n    camera_port = 0\n\n    # Number of frames to throw away while the camera adjusts to light levels\n    ramp_frames = 30\n\n    # Now we can initialize the camera capture object with the cv2.VideoCapture class.\n    # All it needs is the index to a camera port.\n    camera = cv2.VideoCapture(camera_port)\n\n    # Captures a single image from the camera and returns it in PIL format\n    def get_image():\n        # read is the easiest way to get a full image out of a VideoCapture object.\n        retval, im = camera.read()\n        return im\n\n    # Ramp the camera - these frames will be discarded and are only used to allow v4l2\n    # to adjust light levels, if necessary\n    for i in xrange(ramp_frames):\n        temp = get_image()\n    print(\"Taking image...\")\n    # Take the actual image we want to keep\n    camera_capture = get_image()\n    print(\"Done\")\n    path_to_file = \"/home/team18/image-rec-color/\" + str(file_name) + \".png\"\n    print path_to_file\n    # A nice feature of the imwrite method is that it will automatically choose the\n    # correct format based on the file extension you provide. Convenient!\n    cv2.imwrite(path_to_file, camera_capture)\n\n    # # You'll want to release the camera, otherwise you won't be able to create a new\n    # # capture object until your script exits\n    # del camera\n    return path_to_file\n\ndetect_objects()\n=======\n\nclass ObjectRecognition:\n\n\tdef detect_objects(self):\n\t    # take picture from webcam\n\t    now = datetime.datetime.now()\n\t    file_name = now.strftime(\"%Y-%m-%d\")\n\t    img = cv2.imread(str(take_picture(file_name)), 1)\n\n\t    img=cv2.resize(img, (340, 220))\n\t    imgHSV= cv2.cvtColor(img, cv2.COLOR_BGR2HSV)\n\n\t    # Find the red apple\n\t    lower_range_apple = np.array([10, 150, 70], dtype=np.uint8)\n\t    upper_range_apple = np.array([179, 255, 100], dtype=np.uint8)\n\t    red = [30, 30, 200]\n\t    # Find the orange\n\t    lower_range_orange = np.array([0, 160, 125], dtype=np.uint8)\n\t    upper_range_orange = np.array([100, 255, 150], dtype=np.uint8)\n\t    orange = [40, 127, 255]\n\t    # Find the banana\n\t    lower_range_banana = np.array([20, 100, 150], dtype=np.uint8)\n\t    upper_range_banana = np.array([40, 200, 255], dtype=np.uint8)\n\t    yellow = [0, 240, 255]\n\t    # Find the pear\n\t    lower_range_pear = np.array([40, 70, 100], dtype=np.uint8)\n\t    upper_range_pear = np.array([50, 200, 255], dtype=np.uint8)\n\t    green = [74, 111, 55]\n\n\t    # Draw box around the element\n\t    center_of_apple = find_element_within_range(img, imgHSV, lower_range_apple, upper_range_apple,red)\n\t    # cv2.imshow('image', img)\n\t    # cv2.waitKey(0)\n\t    #\n\t    center_of_orange = find_element_within_range(img, imgHSV, lower_range_orange, upper_range_orange, orange)\n\t    # cv2.imshow('image', img)\n\t    # cv2.waitKey(0)\n\t    #\n\t    center_of_banana = find_element_within_range(img, imgHSV, lower_range_banana, upper_range_banana, yellow)\n\t    # cv2.imshow('image', img)\n\t    # cv2.waitKey(0)\n\t    center_of_pear = find_element_within_range(img, imgHSV, lower_range_pear, upper_range_pear, green)\n\n\t    centers_array = [center_of_apple, center_of_banana, center_of_pear, center_of_orange]\n\n\t    cv2.imshow('image', img)\n\t    cv2.waitKey(0)\n\t    \n\t    return centers_array\n\n\n\tdef find_element_within_range(image, imgHSV, lower_range, upper_range, color):\n\t    mask = cv2.inRange(imgHSV, lower_range, upper_range)\n\n\t    cv2.imshow('mask',mask)\n\t    cv2.waitKey(0)\n\n\t    element = cv2.getStructuringElement(cv2.MORPH_RECT,(1,1))\n\t    mask = cv2.erode(mask,element, iterations=2)\n\t    mask = cv2.dilate(mask,element,iterations=2)\n\t    mask = cv2.erode(mask,element)\n\n\t    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\n\t    maximumArea = 0\n\t    bestContour = None\n\t    for contour in contours:\n\t        currentArea = cv2.contourArea(contour)\n\t        if currentArea > maximumArea:\n\t            bestContour = contour\n\t            maximumArea = currentArea\n\t    #Create a bounding box around the biggest red object\n\t    x,y,w,h = (0, 0, 0, 0)\n\n\t    if bestContour is not None:\n\t        x,y,w,h = cv2.boundingRect(bestContour)\n\t        cv2.rectangle(image, (x,y),(x+w,y+h), color, 3)\n\n\t    if x != 0:\n\t        cv2.circle(image,(x+w/2,y+h/2),3,3)\n\t        center = (x+w/2,y+h/2)\n\t    else:\n\t        center = 0\n\n\t    return center\n\n\tdef take_picture(file_name):\n\t    # Camera 0 is the camera on the arm\n\t    camera_port = 0\n\n\t    # Number of frames to throw away while the camera adjusts to light levels\n\t    ramp_frames = 10\n\n\t    # Now we can initialize the camera capture object with the cv2.VideoCapture class.\n\t    # All it needs is the index to a camera port.\n\t    camera = cv2.VideoCapture(camera_port)\n\n\t    # Captures a single image from the camera and returns it in PIL format\n\t    def get_image():\n\t        # read is the easiest way to get a full image out of a VideoCapture object.\n\t        retval, im = camera.read()\n\t        return im\n\n\t    # Ramp the camera - these frames will be discarded and are only used to allow v4l2\n\t    # to adjust light levels, if necessary\n\t    for i in xrange(ramp_frames):\n\t        temp = get_image()\n\t    print(\"Taking image...\")\n\t    # Take the actual image we want to keep\n\t    camera_capture = get_image()\n\t    print(\"Done\")\n\t    path_to_file = \"/home/team18/image-rec-color/\" + str(file_name) + \".png\"\n\t    print path_to_file\n\t    # A nice feature of the imwrite method is that it will automatically choose the\n\t    # correct format based on the file extension you provide. Convenient!\n\t    cv2.imwrite(path_to_file, camera_capture)\n\n\t    # # You'll want to release the camera, otherwise you won't be able to create a new\n\t    # # capture object until your script exits\n\t    # del camera\n\t    return path_to_file\n\n>>>>>>> b1cf154b9585987687da14aad876036ae8532e36\n",
+			"file": "/home/team18/image-rec-color/detect_color_objects.py",
+			"file_size": 8780,
+			"file_write_time": 131618334158546514,
+			"settings":
+			{
+				"buffer_size": 8780,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/team18/NLP/ExecutionFile/csvfile/Mytestsh.sh",
+			"settings":
+			{
+				"buffer_size": 615,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/team18/catkin_ws/my_scripts/Grasping/GetPose.py",
+			"settings":
+			{
+				"buffer_size": 158,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/team18/catkin_ws/my_scripts/Grasping/GetJointPos.py",
+			"settings":
+			{
+				"buffer_size": 218,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "GraspingDemoAdv.py",
+			"settings":
+			{
+				"buffer_size": 10004,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Packages/Python/Python.sublime-build",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 128.0,
+		"last_filter": "Package Control: inst",
+		"selected_items":
+		[
+			[
+				"Package Control: inst",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: re",
+				"Package Control: Remove Package"
+			],
+			[
+				"Package Control: ",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: ins",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: in",
+				"Package Control: Install Package"
+			],
+			[
+				"install ",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 497.0
+	},
+	"console":
+	{
+		"height": 383.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = '6f4c264a24d933ce70df5dedcf1dcaee' + 'ebe013ee18cced0ef93d5f746d80ef60'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by) "
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/home/team18/Grasp-Detector-master",
+		"/home/team18/Grasp-Detector-master/__pycache__"
+	],
+	"file_history":
+	[
+		"/home/team18/NLP/DeepSpeech/data/alphabet.txt",
+		"/home/team18/NLP/ExecutionFile/csvfile/model_test.csv",
+		"/home/team18/NLP/ExecutionFile/csvfile/model_dev.csv",
+		"/home/team18/NLP/ExecutionFile/csvfile/model_train.csv",
+		"/home/team18/NLP/ExecutionFile/NLP_class.py",
+		"/home/team18/NLP/ExecutionFile/csvfile/CSVGenerator.py",
+		"/home/team18/NLP/models/alphabet.txt",
+		"/home/team18/NLP/ExecutionFile/csvfile/Mytestsh.sh",
+		"/home/team18/NLP/DeepSpeech/data/lm/trie",
+		"/home/team18/NLP/Mytestsh.sh",
+		"/home/team18/spaghetti/GestRecB.py",
+		"/home/team18/NLP/MyTestData/cv-valid-test2.csv",
+		"/home/team18/NLP/MyTestData/cv-valid-dev2.csv",
+		"/home/team18/NLP/MyTestData/cv-valid-train2.csv",
+		"/home/team18/NLP/ExecutionFile/real_time_record.py",
+		"/home/team18/Grasp-Detector-master/detect_color_objects.py",
+		"/home/team18/Grasp-Detector-master/detect_color.py",
+		"/home/team18/Grasping_QR/GraspingDemo.py",
+		"/home/team18/Grasp-Detector-master/camera_calib_BMW.py",
+		"/home/team18/NLP/ExecutionFile/csvfiles/CSVGenerator.py",
+		"/home/team18/Grasp-Detector-master/graspNet.py",
+		"/home/team18/my_scripts/Grasping/move_helper_right_hand_camera.py",
+		"/home/team18/catkin_ws/src/intera_sdk/intera_interface/scripts/enable_robot.py",
+		"/home/team18/NLP/ExecutionFile/client.py",
+		"/home/team18/NLP/ExecutionFile/csvfiles/Mytestsh.sh",
+		"/home/team18/NLP/ExecutionFile/csvfiles/model_test.csv",
+		"/home/team18/NLP/ExecutionFile/csvfiles/model_dev.csv",
+		"/home/team18/NLP/ExecutionFile/csvfiles/model_train.csv",
+		"/home/team18/NLP/ExecutionFile/csv files/CSVGenerator.py",
+		"/home/team18/NLP/ExecutionFile/CSVGenerator.py",
+		"/home/team18/NLP/ExecutionFile/ggwp.csv",
+		"/home/team18/NLP/ExecutionFile/csvWritorExample.py",
+		"/home/team18/NLP/ExecutionFile/analyze.py",
+		"/home/team18/openpose/examples/Sawyer_GesRec/Test.py",
+		"/home/team18/openpose/examples/Sawyer_GesRec/GestRecEE.py",
+		"/home/team18/openpose/examples/Sawyer_GesRec/GestRecClass.py",
+		"/home/team18/openpose/examples/Sawyer_GesRec/GestRec.py",
+		"/home/team18/NLP/DeepSpeech/native_client/python/client.py",
+		"/home/team18/NLP/Mytestsh2.sh",
+		"/home/team18/NLP/DeepSpeech/DeepSpeech.py",
+		"/home/team18/spaghetti/GestRec.py",
+		"/home/team18/catkin_ws/my_scripts/Grasping/test.py",
+		"/home/team18/openpose/examples/Sawyer_GesRec/keypoints_RorL/GestRec_Class.py",
+		"/home/team18/openpose/GestRec.sh",
+		"/home/team18/openpose/examples/Sawyer_GesRec/keypoints_RorL/gesture_recognition.py",
+		"/home/team18/spaghetti/gesture_recognition.py",
+		"/home/team18/GestRec.sh",
+		"/home/team18/openpose/run_python_yay.py",
+		"/home/team18/NLP/CVfiles/cv-valid-train.csv",
+		"/home/team18/openpose/examples/Sawyer_GesRec/gesture_recognition.py",
+		"/home/team18/openpose/examples/Sawyer_GesRec/spaghetti/gesture_recognition.py",
+		"/home/team18/openpose/spaghetti/gesture_recognition.py",
+		"/home/team18/gesture_recognition/spaghetti/gesture_recognition.py",
+		"/home/team18/gesture_recognition/GestRec.sh",
+		"/home/team18/NLP/MyTestData/gg/cv-valid-dev.csv",
+		"/home/team18/NLP/DeepSpeech/bin/gpu_usage_chart",
+		"/home/team18/NLP/DeepSpeech/bin/gpu_usage_plot",
+		"/home/team18/NLP/CVfiles/cv-valid-dev.csv",
+		"/home/team18/NLP/MyTestData/cv-valid-train.csv",
+		"/home/team18/NLP/MyTestData/cv-valid-test.csv",
+		"/home/team18/NLP/MyTestData/cv-valid-dev.csv",
+		"/home/team18/NLP/MyCpData/myself.sh",
+		"/home/team18/NLP/CVfiles/cv-other-train.csv",
+		"/home/team18/NLP/CVfiles/cv_corpus_v1/cv-valid-train.csv",
+		"/home/team18/NLP/import_s3_files.py",
+		"/home/team18/NLP/CVfiles/cv_corpus_v1/cv-valid-test.csv",
+		"/home/team18/NLP/models/trie",
+		"/home/team18/NLP/MyCpData/myself.csv",
+		"/home/team18/NLP/CommonVoiceTrainingData/cv_corpus_v1/copyOut.sh",
+		"/home/team18/NLP/DeepSpeech/data/ldc93s1/ldc93s1.csv",
+		"/home/team18/NLP/DeepSpeech/bin/run-ldc93s1.sh",
+		"/home/team18/NLP/CommonVoiceTrainingData/cv_corpus_v1/cv-valid-train.csv",
+		"/home/team18/NLP/CommonVoiceTrainingData/cv_corpus_v1/cv-other-train.csv",
+		"/home/team18/NLP/DeepSpeech/bin/run-tc-ldc93s1.sh",
+		"/home/team18/Grasp-Detector-master/vic_camera.py",
+		"/home/team18/Grasp-Detector-master/__init__.py",
+		"/home/team18/Grasp-Detector-master/testing.py",
+		"/home/team18/Grasp-Detector-master/testing_2.py",
+		"/home/team18/Grasp-Detector-master/Grasp-Detector.sublime-project",
+		"/home/team18/.config/sublime-text-3/Packages/Anaconda/Anaconda.sublime-settings",
+		"/home/team18/Grasp-Detector-master/testing_3.py",
+		"/home/team18/anaconda3/envs/tensorflow-gpu/lib/python3.6/site-packages/tensorflow/python/ops/variables.py",
+		"/home/team18/Grasp-Detector-master/testing3.py",
+		"/home/team18/anaconda3/envs/tensorflow-gpu/lib/python3.6/site-packages/tensorflow/__init__.py",
+		"/home/team18/Grasp-Detector-master/grasp_predictor.py",
+		"/usr/lib/pymodules/python2.7/matplotlib/__init__.py",
+		"/home/team18/Grasp-Detector-master/grasp_image.py",
+		"/home/team18/.config/sublime-text-3/Packages/Anaconda/anaconda_lib/import_validator.py",
+		"/home/team18/Grasp-Detector-master/grasp_learner.py",
+		"/home/team18/.config/sublime-text-3/Packages/User/Anaconda.sublime-settings",
+		"/home/team18/.config/sublime-text-3/Packages/User/tensorflow.sublime-build"
+	],
+	"find":
+	{
+		"height": 25.0
+	},
+	"find_in_files":
+	{
+		"height": 102.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"load_op_library",
+			"path",
+			"python_path",
+			"E501",
+			"python",
+			"import",
+			"lintin",
+			"import",
+			"interpre"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 7,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1486,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1486,
+								1486
+							]
+						],
+						"settings":
+						{
+							"auto_indent": false,
+							"default_dir": "/home/team18/Grasp-Detector-master",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_width": 2,
+							"word_wrap": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "testing.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 659,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".",
+									"selector": "source.python - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".",
+									"selector": "source.python - string - constant.numeric"
+								}
+							],
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/home/team18/NLP/ExecutionFile/client.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4212,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3551,
+								3551
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".",
+									"selector": "source.python - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".",
+									"selector": "source.python - string - constant.numeric"
+								}
+							],
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1249.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/home/team18/image-rec-color/detect_color_objects.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 8780,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1124,
+								1124
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/home/team18/NLP/ExecutionFile/csvfile/Mytestsh.sh",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 615,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								147,
+								147
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "/home/team18/catkin_ws/my_scripts/Grasping/GetPose.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 158,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								155,
+								155
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "/home/team18/catkin_ws/my_scripts/Grasping/GetJointPos.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 218,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "GraspingDemoAdv.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10004,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 51.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 25.0
+	},
+	"input":
+	{
+		"height": 38.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 259.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "tensorflow builder",
+	"project": "Grasp-Detector.sublime-project",
+	"replace":
+	{
+		"height": 46.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"grasp_image.py"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 231.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"build_systems":
+	[
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "tensorflow builder",
+			"selector": "source.python",
+			"shell_cmd": "/home/team18/anaconda3/envs/tensorflow-gpu/bin/python3 -u \"$file\""
+		},
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "Anaconda Python Builder",
+			"selector": "source.python",
+			"shell_cmd": "\"python\" -u \"$file\""
+		}
+	],
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "/home/team18/Grasp-Detector-master"
+		}
+	],
+	"settings":
+	[
+		{
+			"python_interpreter": "/home/team18/anaconda3/envs/tensorflow-gpu/bin/python3"
+		}
+	]
+}
