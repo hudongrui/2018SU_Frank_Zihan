@@ -54,8 +54,8 @@ Gp.move(limb, pre_grasp_pos, 0.2)
 frame = Gp.take_picture(0, 30)
 
 cv2.imshow("Image Captured", frame)
-cv2.waitKey()
-cv2.destroyAllWindows()
+# cv2.waitKey()
+# cv2.destroyAllWindows()
 
 objLoc = Gp.detect_block(8, frame)
 
