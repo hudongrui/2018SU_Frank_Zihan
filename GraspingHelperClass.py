@@ -152,11 +152,16 @@ def pixelToWorld(u, v):
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0])
 
     # TODO: change this value to address camera offset in x direction
-    hom_Mtrx_c_g[0][3] = 0.06
+    # hom_Mtrx_c_g[0][3] = 0.06
+    hom_Mtrx_c_g[0][3] = -0.09
+
     # TODO: change this value to address camera offset in y direction
     hom_Mtrx_c_g[1][3] = 0.01
+    hom_Mtrx_c_g[1][3] = -0.01
     # TODO: change this value to address camera offset in z direction
     hom_Mtrx_c_g[2][3] = 0.07
+
+    #
     # print("homogeneous transformation from /camera to /gripper_base is:")
     # print(hom_Mtrx_c_g)
 
@@ -468,7 +473,7 @@ def load_images_from_folder(folder):
 def detect_block(block_num, image):
     img_show = image.copy()
 
-    templates = load_images_from_folder("/home/team18/Grasp-Detector-master/Templates")
+    templates = load_images_from_folder("/home/team18/Frank_Ray_Zihan/Templates")
 
     template_index = 1
     locations = []
@@ -504,16 +509,15 @@ def detect_block(block_num, image):
             center_x = top_left[0] + w // 2
             center_y = top_left[1] + h // 2
             center = (center_x, center_y)
-            print(center)
-            print("Found Block: ")
-            print(template_index)
+            print "Found Block " + str(template_index), "at " + str(center)
             locations.append(center)
             numbers.append(template_index)
 
         template_index = template_index + 1
 
     if block_num not in numbers:
-        print("Could not find the block you are asking for.")
-        return None
+        print "Could not find the block you are asking for."
+        print "Please adjust the block so the camera could recognize the block."
+        return None, image
     else:
-        return locations[numbers.index(block_num)]
+        return locations[numbers.index(block_num)], img_show
