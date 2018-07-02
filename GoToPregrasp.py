@@ -27,7 +27,8 @@ pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109
 
 rospy.sleep(1)
 
-Gp.move(limb, pre_grasp_pos, 0.2)
+# Gp.move(limb, pre_grasp_pos, 0.2)
+
 
 # frame = Gp.take_picture(0, 30)  # changed to port 1 cry 15/02/2018
 
@@ -40,12 +41,4 @@ Gp.move(limb, pre_grasp_pos, 0.2)
 #                                      # q_x=0, q_y=0, q_z=0, q_w=0)
 #                                      q_x=rot[0], q_y=rot[1], q_z=rot[2], q_w=rot[3])
 # Gp.move(limb, positions=moveJoint, move_speed=0.2)
-rospy.sleep(0.5)
-
-counter = 9
-
-while counter != 0:
-    frame = Gp.take_picture(0, 30)
-    cv2.imshow("Picture", frame)
-    cv2.waitKey()
     

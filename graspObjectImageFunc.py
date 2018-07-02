@@ -42,7 +42,7 @@ def drawRectangle(I, h, w, t, gsize=300):
 def predictGraspOnImage(I, objLoc):
     # default parameters
     model_path = '/home/team18/Grasp-Detector-master/models/Grasp_model'  # 'Grasp model you want to use'
-    nsamples = 128  # 'Number of patch samples. More the better, but it\'ll get slower'
+    nsamples = 1000  # 'Number of patch samples. More the better, but it\'ll get slower'
     nbest = 1  # 'Number of grasps to display'
     gscale = 0.234375  # 'Scale of grasp. Default is the one used in the paper, given a 720X1280 res image'
     imsize = max(I.shape[:2])

@@ -153,7 +153,7 @@ def pixelToWorld(u, v):
 
     # TODO: change this value to address camera offset in x direction
     # hom_Mtrx_c_g[0][3] = 0.06
-    hom_Mtrx_c_g[0][3] = -0.09
+    hom_Mtrx_c_g[0][3] = -0.08
 
     # TODO: change this value to address camera offset in y direction
     hom_Mtrx_c_g[1][3] = 0.01
@@ -503,7 +503,10 @@ def detect_block(block_num, image):
         # recognized.append([top_left, bottom_right])
 
         if max_val >= 0.7:
-            cv2.rectangle(img_show, top_left, bottom_right, (0, 255, 0), 2)
+            if template_index == block_num:
+                cv2.rectangle(img_show, top_left, bottom_right, (0, 0, 255), 2)
+            else:
+                cv2.rectangle(img_show, top_left, bottom_right, (0, 255, 0), 2)
             cv2.putText(img_show, str(template_index), (top_left[0], top_left[1]), cv2.FONT_HERSHEY_DUPLEX, 2,
                         (0, 255, 255), 3)
             center_x = top_left[0] + w // 2
