@@ -19,14 +19,15 @@ pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109
 				 1.35516796875]
 # print limb.joint_angles()
 
-Gp.move(limb, pre_grasp_pos, 0.2)
+
+# Gp.move(limb, pre_grasp_pos, 0.2)
 rospy.sleep(1)
 
 #####################################################################################################################
 # Here is to take a picture at pre-grasping postion
-# frame = Gp.take_picture(0, 30)
-# cv2.imshow("Displaying Image", frame)
-# cv2.waitKey()
-# cv2.destroyAllWindows()
-# cv2.imwrite("/home/team18/Frank_Ray_Zihan/2018SU_Frank_Zihan/TestPictures/Painted_Block.jpg", frame)
+frame = Gp.take_picture(0, 30)
+cv2.imshow("Displaying Image", frame)
+cv2.waitKey()
+cv2.destroyAllWindows()
+cv2.imwrite("/home/team18/Frank_Ray_Zihan/2018SU_Frank_Zihan/TestPictures/Painted_Block.jpg", frame)
 ######################################################################################################################
