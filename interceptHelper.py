@@ -255,7 +255,8 @@ def mid_point(point1, point2):
 
 
 class Rectangle:
-    def __init__(self, point1, point2, point3, point4=None, index=None, ):
+    def __init__(self, point1, point2, point3, point4=None, index=None, location=None):
+        # location should be a 3-dimensional matrix that includes x, y, z coordinates of the block
         self.center = Intersect(0, 0)
         if index is not None:
             self.index = index
@@ -267,6 +268,8 @@ class Rectangle:
         else:
             self.p = [point1, point2, point3, point4]
             self.center = self.find_its_center_4()
+        if location is not None:
+            self.location = location
 
     def find_its_center_3(self):
         length1 = math.hypot((self.point1.x - self.point2.x), (self.point1.y - self.point2.y))
