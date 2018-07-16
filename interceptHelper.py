@@ -288,6 +288,12 @@ class Rectangle:
         y = [p.y for p in self.p]
         return Intersect(sum(x) / len(x), sum(y) / len(y))
 
+    def getLocation(self):
+        return self.location
+
+    def setLocation(self, newlocation):
+        self.location = newlocation
+
 
 def square_img_to_centers_list(img):
     img_shadowless = rm_shadow(img)

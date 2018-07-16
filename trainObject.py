@@ -48,29 +48,14 @@ while square_center_list is not None:
     # Pre-grasping joint angles
     pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109375, 0.4400439453125, 1.5005537109375,
                      1.35516796875]
-    # print limb.joint_angles()
-    # Gp.move(limb, safe_move_r2l, 0.2)
 
     rospy.sleep(1)
 
     Gp.move(limb, pre_grasp_pos, 0.2)
 
-# frame = Gp.take_picture(0, 30)  # changed to port 1 cry 15/02/2018
-
-# objLoc = Gp.detect_block(8, frame)
-
-# worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(objLoc[0], objLoc[1])
-
-# moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
-#                                      p_x=worldVec[0], p_y=worldVec[1] + 0.05, p_z=0.5,
-#                                      # q_x=0, q_y=0, q_z=0, q_w=0)
-#                                      q_x=rot[0], q_y=rot[1], q_z=rot[2], q_w=rot[3])
-# Gp.move(limb, positions=moveJoint, move_speed=0.2)
-
 ###############################################################################################
 # Read User Inputs of the desired block to pick up
 
-######################################################################################################
 # while block_number is None:
 #     try:
 #         num = input("Choose which block you would like me to grasp, press any key from 1 through 9: ")
@@ -119,6 +104,7 @@ while square_center_list is not None:
     worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_center_list[0][0], square_center_list[0][0])
     Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
     rospy.sleep(1)
+
     # drop_block_pos = [-0.402546875, -1.1622041015625, 0.3266787109375, 2.2412666015625, -0.301185546875,
     #                 0.469794921875,
     #                 -1.2894443359375]
