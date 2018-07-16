@@ -81,12 +81,12 @@ def extend_line(line):
     x1, y1, x2, y2 = line[0]
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
     # TODO: Adjust the following threshold to pass the lines
-    one_block_len = 90
-    ratio = float(2.5 * (one_block_len - length) / length)
-    if one_block_len <= length <= 1.5 * one_block_len:
+    one_block_len = 65
+    ratio = float((one_block_len - length) / length)
+    if one_block_len <= length <= 1.3 * one_block_len:
         # print("One Block")
         return line
-    elif length > 1.5 * one_block_len:
+    elif length > 1.3 * one_block_len:
         # print("Two Blocks")
         ratio = float((2 * one_block_len - length) / length)
 
@@ -103,36 +103,36 @@ def extend_line(line):
         y1_p = y1 - delta_y
         y2_p = y2 + delta_y
     extended = [x1_p, y1_p, x2_p, y2_p]
-    Extended_Length = int(math.sqrt((x2_p - x1_p) ** 2 + (y2_p - y1_p) ** 2))
+    # Extended_Length = int(math.sqrt((x2_p - x1_p) ** 2 + (y2_p - y1_p) ** 2))
     # print("Ratio is: " + str(ratio))
     # print("Extended Length is: " + str(Extended_Length))
     return [extended]
     # return line
 
 
-# def increase_contrast(img):
-#     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-#     cv2.imshow("lab", lab)
-#
-#     # -----Splitting the LAB image to different channels-------------------------
-#     l, a, b = cv2.split(lab)
-#     cv2.imshow('l_channel', l)
-#     cv2.imshow('a_channel', a)
-#     cv2.imshow('b_channel', b)
-#
-#     # -----Applying CLAHE to L-channel-------------------------------------------
-#     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-#     cl = clahe.apply(l)
-#     cv2.imshow('CLAHE output', cl)
-#
-#     # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-#     limg = cv2.merge((cl, a, b))
-#     cv2.imshow('limg', limg)
-#
-#     # -----Converting image from LAB Color model to RGB model--------------------
-#     final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-#
-#     return final
+def increase_contrast(img):
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    cv2.imshow("lab", lab)
+
+    # -----Splitting the LAB image to different channels-------------------------
+    l, a, b = cv2.split(lab)
+    cv2.imshow('l_channel', l)
+    cv2.imshow('a_channel', a)
+    cv2.imshow('b_channel', b)
+
+    # -----Applying CLAHE to L-channel-------------------------------------------
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+    cv2.imshow('CLAHE output', cl)
+
+    # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
+    limg = cv2.merge((cl, a, b))
+    cv2.imshow('limg', limg)
+
+    # -----Converting image from LAB Color model to RGB model--------------------
+    final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+    return final
 
 
 def rm_nearby_intersect(intersections):
@@ -172,17 +172,17 @@ def rm_duplicates(rects, intersects):
 
 
 def rm_shadow(image):
+    image = image.copy()
     h, w = image.shape[0], image.shape[1]
 
     for y in range(h):
         for x in range(w):
             pixel = image[y, x]
             r, g, b = pixel[0], pixel[1], pixel[2]
-            lim_min = 60
-            lim_max = 100
+            lim = 90
 
-            if lim_min < r < lim_max and lim_min < g < lim_max and lim_min < b < lim_max:
-                image[y, x] = [150, 150, 150]
+            if r < lim and g < lim and b < lim:
+                image[y, x] = [0,0,0]
 
     return image
 
