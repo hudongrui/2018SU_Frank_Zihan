@@ -21,6 +21,8 @@ from intera_core_msgs.srv import (
     SolvePositionIKRequest,
 )
 
+debugMode = False
+
 
 # ======================================================================================
 def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, q_w):
@@ -125,8 +127,9 @@ def pixelToWorld(u, v):
         try:
             # transform from '/gripper' (target) frame to '/base' (source) frame
             (trans, rot) = listener.lookupTransform('/base', '/right_gripper_base', rospy.Time(0))
-            # print('trans is', trans)
-            # print('rot is', rot)
+            if debugMode:
+                print('trans is', trans)
+                print('rot is', rot)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             continue
 
@@ -140,13 +143,15 @@ def pixelToWorld(u, v):
     z = trans[2]
     trans = np.array(trans)
     trans.shape = (3, 1)
-    # print(trans)
+    if debugMode:
+        print(trans)
     hom_Mtrx_g_b = transformations.quaternion_matrix(rot)
     hom_Mtrx_g_b[0][3] = trans[0]
     hom_Mtrx_g_b[1][3] = trans[1]
     hom_Mtrx_g_b[2][3] = trans[2]
-    # print("homogeneous transformation from /gripper_base to /base is:")
-    # print(hom_Mtrx_g_b)
+    if debugMode:
+        print("homogeneous transformation from /gripper_base to /base is:")
+        print(hom_Mtrx_g_b)
 
     # homogeneous transformation from /camera to /gripper
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0])
@@ -154,25 +159,27 @@ def pixelToWorld(u, v):
     # TODO: change this value to address camera offset in x direction
     # hom_Mtrx_c_g[0][3] = 0.06
     hom_Mtrx_c_g[0][3] = -0.08
-
     # TODO: change this value to address camera offset in y direction
-    hom_Mtrx_c_g[1][3] = 0.01
     hom_Mtrx_c_g[1][3] = -0.01
     # TODO: change this value to address camera offset in z direction
     hom_Mtrx_c_g[2][3] = 0.07
 
-    #
-    # print("homogeneous transformation from /camera to /gripper_base is:")
-    # print(hom_Mtrx_c_g)
+    if debugMode:
+        print("homogeneous transformation from /camera to /gripper_base is:")
+        print(hom_Mtrx_c_g)
 
     hom_Mtrx_c_b = np.dot(hom_Mtrx_g_b, hom_Mtrx_c_g)
-    # print("homogeneous transformation from /camera to /base is:")
-    # print(hom_Mtrx_c_b)
+
+    if debugMode:
+        print("homogeneous transformation from /camera to /base is:")
+        print(hom_Mtrx_c_b)
 
     Mtrx_c_b = hom_Mtrx_c_b[:3, :4]
     Mtrx_c_b = np.matrix(Mtrx_c_b)
-    # print("transformation from /camera to /gripper_base is:")
-    # print(Mtrx_c_b)
+
+    if debugMode:
+        print("transformation from /camera to /gripper_base is:")
+        print(Mtrx_c_b)
 
     camMtrx = camCalib.getCamMatrx()
     camMtrxInv = np.linalg.inv(camMtrx)
@@ -186,8 +193,11 @@ def pixelToWorld(u, v):
     one.shape = (1, 1)
     camVec = np.concatenate((camMtrxInv * pixVec, one), axis=0)
     worldVec = Mtrx_c_b * camVec
-    # print(camVec)
-    # print(Mtrx_c_b * camVec)
+
+    if debugMode:
+        print("camera vector is: ")
+        print(camVec)
+        print(Mtrx_c_b * camVec)
 
     return worldVec, hom_Mtrx_c_b, rot
 
@@ -203,7 +213,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
     print('endEffPos, x: ', endEffPos[0])
     print('endEffPos, y: ', endEffPos[1])
-    # print('endEffPos, z: ', endEffPos[2])
+    print('endEffPos, z: ', endEffPos[2])
     hom_rotGrasp = transformations.rotation_matrix(Ang, (0, 0, 1))
     hom_rotGrasp1 = np.dot(hom_Mtrx_c_b, hom_rotGrasp)
     # hom_rotGrasp1[0][3] = 0

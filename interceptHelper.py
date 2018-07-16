@@ -7,11 +7,21 @@ import cv2
 import numpy as np
 import time
 
+##################################################################################
+# debugMode helper
+# -1    -- enable all debugging feature
+# 0     -- disable debug
+# 1     -- matrix debugging
+# 2     -- edge detection debug
+
+debugMode = 2
+##################################################################################
 
 #########################################################
 #########################################################
 # Check intersection of two points, if there is return the
 # point, angle, and True; if not, return none and False
+
 
 def check_intersect(line_1, line_2):
     # Endpoints of the first line
@@ -161,11 +171,10 @@ def rm_nearby_intersect(intersections):
 #     # apply gamma correction using the lookup table
 #     return cv2.LUT(image, table)
 
-def rm_duplicates(rects, intersects):
+def rm_duplicates(rects):
     centers = []
-    # centers.append([rects[0].center.x, rects[0].center.y])
     for rect in rects:
-        rect_center = [rect.center.x, rect.center.y]
+        rect_center = rect.center
         if rect_center not in centers:
             centers.append(rect_center)
     return centers
@@ -291,8 +300,23 @@ class Rectangle:
     def getLocation(self):
         return self.location
 
-    def setLocation(self, newlocation):
-        self.location = newlocation
+    def getCenterX(self):
+        return self.center.x
+
+    def getCenterY(self):
+        return self.center.y
+
+    def getCenter(self):
+        return self.center
+
+    def setLocation(self, pCoordinate, qCoordinate):
+        self.location = {"p_x": pCoordinate[0], "p_y": pCoordinate[1], "p_z": pCoordinate[2],
+                         "q_x": qCoordinate[0], "q_y": qCoordinate[1], "q_z": qCoordinate[2], "q_w": qCoordinate[3]}
+
+    def setIndex(self, index):
+        self.index = index
+
+
 
 
 def square_img_to_centers_list(img):
@@ -323,7 +347,7 @@ def square_img_to_centers_list(img):
         i += 1
     intersections = rm_nearby_intersect(intersections)
     found_rect = categorize_rect(intersections)
-    found_rect_centers = rm_duplicates(found_rect, intersections)
+    found_rect_centers = rm_duplicates(found_rect)
 
     number_of_center = 0
     height, width, _ = img.shape
@@ -336,6 +360,7 @@ def square_img_to_centers_list(img):
     print(number_of_center)
     if number_of_center == 0:
         return None
-    cv2.imshow("Only the dots", blank_image)
-    cv2.waitKey()
+    if debugMode == 2 or debugMode == -1:
+        cv2.imshow("Only the dots", blank_image)
+        cv2.waitKey()
     return found_rect_centers
