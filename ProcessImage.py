@@ -25,6 +25,8 @@ img = img.copy()
 
 mask = io.imread("Background.jpg")
 
+cv2.imshow("Original", img)
+
 img_filtered = cv2.subtract(mask, img)
 
 img_filtered = iH.rm_shadow(img_filtered)
