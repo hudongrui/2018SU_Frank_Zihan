@@ -1,7 +1,8 @@
+from __future__ import division
 import subprocess
 # import roslib
 # roslib.load_manifest('your_package_name')
-from __future__ import division
+
 import rospy
 import numpy as np
 import interceptHelper as iH
@@ -33,6 +34,7 @@ def handle_input_exception():
     block_number = None
     print("Invalid entry, please try again.")
 
+moved_times = 0
 square_center_list = 0
 while square_center_list is not None:
     # Reset joint angles
@@ -88,11 +90,13 @@ while square_center_list is not None:
     number_of_blocks = 0
     while square_center_list is None:
         img = Gp.take_picture(0, 30)
+        # cv2.imshow("Only the dots", img)
+        # cv2.waitKey()
         # objLoc, new_frame = Gp.detect_block(block_number, frame)
         # cv2.imshow("Image Captured", new_frame)
         square_center_list = iH.square_img_to_centers_list(img)
 
-    worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_center_list[0].x, square_center_list[0].y)
+    worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_center_list[0][0], square_center_list[0][1])
 
     # Move above the desired block to generate better grasp model
     moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
@@ -106,11 +110,14 @@ while square_center_list is not None:
     frame = Gp.take_picture(0, 30)
 
     # objLoc, _ = Gp.detect_block(block_number, frame)
-    updated_square_center_list = iH.square_img_to_centers_list(frame)
+    square_center_list = iH.square_img_to_centers_list(frame)
 
-    H, W, Ang = gi.predictGraspOnImage(frame, updated_square_center_list[0])
+    print("found square position: ", square_center_list[0][0], square_center_list[0][0], "\n")
+    H, W, Ang = gi.predictGraspOnImage(frame, square_center_list[0])
+    print("found the best H and W: ", H, W)
 
-    Gp.graspExecute(limb, gripper, W, H, Ang, updated_square_center_list[0].x, updated_square_center_list[0].y, 1)
+    worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_center_list[0][0], square_center_list[0][0])
+    Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
     rospy.sleep(1)
     # drop_block_pos = [-0.402546875, -1.1622041015625, 0.3266787109375, 2.2412666015625, -0.301185546875,
     #                 0.469794921875,
@@ -118,7 +125,7 @@ while square_center_list is not None:
 
     # drop_block_pos = [-1.9891015625, -2.45061328125, -0.9478515625, 0.08087109375, -2.1742919921875, 2.27120703125, 1.4468994140625]
     drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                     p_x=0.83, p_y=0 + 0.05, p_z=0,
+                                     p_x=0.83, p_y=0 + 0.05, p_z=0.02 + 0.04 * moved_times,
                                      # q_x=0, q_y=0, q_z=0, q_w=0)
                                      q_x=rot[0], q_y=rot[1], q_z=rot[2], q_w=rot[3])
 
@@ -126,3 +133,4 @@ while square_center_list is not None:
     rospy.sleep(1)
     gripper.open()
     rospy.sleep(0.5)
+    moved_times += 1

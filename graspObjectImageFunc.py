@@ -54,6 +54,7 @@ def predictGraspOnImage(I, objLoc):
     batchsize = nsamples
     nbatches = 1
 
+    print("\n-------------------------------------------------------------------")
     print('Loading grasp model')
     st_time = time.time()
     G = grasp_obj(model_path, gpu_id)
@@ -61,7 +62,7 @@ def predictGraspOnImage(I, objLoc):
     # G.test_close()  # 2/7/2018 added by BW
     G.test_init()
     P = Predictors(I, G)
-    print('Time taken: {}s'.format(time.time() - st_time))
+    print('Time taken: {}s\n'.format(time.time() - st_time))
 
     fc8_predictions = []
     patch_Hs = []
@@ -82,7 +83,7 @@ def predictGraspOnImage(I, objLoc):
     r = np.sort(fc8_predictions, axis=None)
     r_no_keep = r[-nbest]
     print('Time taken: {}s'.format(time.time() - st_time))
-
+    print("-------------------------------------------------------------------\n")
     for pindex in range(fc8_predictions.shape[0]):
         for tindex in range(fc8_predictions.shape[1]):
             if fc8_predictions[pindex, tindex] < r_no_keep:

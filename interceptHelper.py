@@ -246,7 +246,7 @@ def categorize_rect(intersections):
                             if is_in_range_of_a_circle(possible_3_c, forth_point):
                                 list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
     elapsed_time = time.time() - start_time
-    print("the time elapsed for categorizing square is " + str(elapsed_time))
+    # print("the time elapsed for categorizing square is " + str(elapsed_time))
     return list_of_squares
 
 
@@ -293,7 +293,7 @@ def square_img_to_centers_list(img):
     img_dilation = cv2.dilate(img_erosion, kernel, iterations=2)
     img_blurred_bilateral = cv2.bilateralFilter(img_dilation, 20, 50, 50)
     edges = cv2.Canny(img_blurred_bilateral, 200, 300)
-    cv2.imshow("edges", edges)
+    # cv2.imshow("edges", edges)
     # lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=20, maxLineGap=60)
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=30, maxLineGap=40)
     ext_lines = []
@@ -316,12 +316,17 @@ def square_img_to_centers_list(img):
     found_rect = categorize_rect(intersections)
     found_rect_centers = rm_duplicates(found_rect, intersections)
 
+    number_of_center = 0
     height, width, _ = img.shape
     blank_image = np.zeros((height, width, 3), np.uint8)
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
     for center in found_rect_centers:
+        number_of_center += 1
         cv2.circle(blank_image, (int(center[0]), int(center[1])), 7, (0, 255, 255), -1)
+    print(number_of_center)
+    if number_of_center == 0:
+        return None
     cv2.imshow("Only the dots", blank_image)
     cv2.waitKey()
     return found_rect_centers

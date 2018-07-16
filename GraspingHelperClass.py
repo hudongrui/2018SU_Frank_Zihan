@@ -197,6 +197,9 @@ def pixelToWorld(u, v):
 
 # ======================================================================================
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
+    y_offset = 0.05
+    x_offset = 0.05
+    print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
     print('endEffPos, x: ', endEffPos[0])
     print('endEffPos, y: ', endEffPos[1])
@@ -226,16 +229,28 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
 
     if table == "1":
         # User left-hand side
+        # top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+        #                                     p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.5,
+        #                                     q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
+        #                                     q_w=rotOriginal[3])
+        # mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+        #                                     p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.3,
+        #                                     q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
+        #                                     q_w=rotOriginal[3])
+        # down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+        #                                      p_x=x_target + 0.03, p_y=y_target + 0.01, p_z=0.1,
+        #                                      q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
+        #                                      q_w=rotOriginal[3])
         top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                            p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.5,
+                                            p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.5,
                                             q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
                                             q_w=rotOriginal[3])
         mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                            p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.3,
+                                            p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.3,
                                             q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
                                             q_w=rotOriginal[3])
         down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                             p_x=x_target + 0.03, p_y=y_target + 0.01, p_z=0.1,
+                                             p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
                                              q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
                                              q_w=rotOriginal[3])
     else:
@@ -286,6 +301,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     move(limb, positions=top_grasp_joint, move_speed=0.2)
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
+    print("Completing grasp execute\n------------------------------------------------------")
 
 
 # ======================================================================================
