@@ -35,7 +35,7 @@ cv2.imshow("Removed Background", img_filtered)
 # cv2.imshow("Mask Image", mask)
 # cv2.waitKey()
 img_shadowless = iH.rm_shadow(img)
-kernel = np.ones((1, 1), np.uint8)
+kernel = np.ones((3, 3), np.uint8)
 img_erosion = cv2.erode(img_filtered, kernel, iterations=1)
 img_dilation = cv2.dilate(img_erosion, kernel, iterations=2)
 # 20 50 50
@@ -46,7 +46,7 @@ img_blurred_bilateral = cv2.bilateralFilter(img_dilation, 9, 75, 75)
 cv2.imshow("Preprocessed Image", img_blurred_bilateral)
 # cv2.waitKey()
 edges = cv2.Canny(img_blurred_bilateral, 50, 200)
-edges = cv2.Canny(img_filtered, 150, 200)
+# edges = cv2.Canny(img_filtered, 150, 200)
 
 cv2.imshow("Canny Edges", edges)
 # lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=20, maxLineGap=60)
@@ -58,7 +58,7 @@ for new_line in lines:
     # Draw Lines after extension
     cv2.line(unext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
 
-cv2.imshow("Originally detected lines", unext_img)
+# cv2.imshow("Originally detected lines", unext_img)
 
 ext_lines = []
 ext_img = img.copy()
@@ -77,7 +77,8 @@ for line in lines.copy():
 
     # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
     line_cnt = line_cnt + 1
-    # cv2.imshow("Extend the lines", ext_img)
+
+cv2.imshow("Extend the lines", ext_img)
 
 intersections = []
 i = 0

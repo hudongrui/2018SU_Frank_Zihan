@@ -207,10 +207,15 @@ def rm_shadow(image):
         for x in range(w):
             pixel = image[y, x]
             r, g, b = pixel[0], pixel[1], pixel[2]
-            lim = 75
+            # This is the limiting threshold that differentiate black and noise
+            lim = 105
+            max_value = max([r, g, b])
+            min_value = min([r, g, b])
 
             if r < lim and g < lim and b < lim:
-                image[y, x] = [0,0,0]
+                # Base on the fact that noise's rgb values stays around
+                if max_value - min_value < 20:
+                    image[y, x] = [0,0,0]
 
     return image
 
@@ -279,11 +284,12 @@ def categorize_rect(intersections):
     tmp_intersection = intersections
     for starting_point in tmp_intersection:
         for next_point in tmp_intersection:
-            if len(tmp_center_list) > 2:
-                standard_length = tmp_center_list[math.trunc(len(tmp_center_list) / 2) - 1].length
-                if distance_between_points(starting_point, next_point) > standard_length * 1.5 or \
-                        distance_between_points(starting_point, next_point) < standard_length / 1.5:
-                    break
+            # TODO: fix this bug -- Zihan
+            # if len(tmp_center_list) > 2:
+            #     standard_length = tmp_center_list[math.trunc(len(tmp_center_list) / 2) - 1].length
+            #     if distance_between_points(starting_point, next_point) > standard_length * 1.5 or \
+            #             distance_between_points(starting_point, next_point) < standard_length / 1.5:
+            #         break
             if starting_point != next_point:
                 base_line = Line(starting_point, next_point)
                 possible_1 = Intersect(starting_point.x - math.sin(base_line.theta) * base_line.length, starting_point.y
@@ -323,8 +329,9 @@ def categorize_rect(intersections):
     return list_of_squares
 
 
-def append_rec_list(list, rect, center_list):
-    list.append(rect)
+# TODO: fix this bug -- Zihan
+def append_rec_list(output_list, rect, center_list):
+    output_list.append(rect)
     center_list.append(rect.center)
 
 
