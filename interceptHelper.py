@@ -217,15 +217,25 @@ class Line:
 def is_in_range_of_a_circle(point1, point2, radius_threshold=None):
     if radius_threshold is None:
         radius_threshold = 15
-    return math.hypot((point2.x - point1.x), (point2.y - point1.y)) < radius_threshold
+    return distance_between_points(point1, point2) < radius_threshold
+
+
+def distance_between_points(point1, point2):
+    return math.hypot((point2.x - point1.x), (point2.y - point1.y))
 
 
 def categorize_rect(intersections):
     start_time = time.time()
+    tmp_center_list = []
     list_of_squares = []
     tmp_intersection = intersections
     for starting_point in tmp_intersection:
         for next_point in tmp_intersection:
+            if len(tmp_center_list) > 2:
+                standard_length = tmp_center_list[math.trunc(len(tmp_center_list) / 2) - 1].length
+                if distance_between_points(starting_point, next_point) > standard_length * 1.5 or \
+                        distance_between_points(starting_point, next_point) < standard_length / 1.5:
+                    break
             if starting_point != next_point:
                 base_line = Line(starting_point, next_point)
                 possible_1 = Intersect(starting_point.x - math.sin(base_line.theta) * base_line.length, starting_point.y
@@ -245,18 +255,29 @@ def categorize_rect(intersections):
                     if is_in_range_of_a_circle(possible_1, third_point):
                         for forth_point in tmp_intersection:
                             if is_in_range_of_a_circle(possible_1_c, forth_point):
-                                list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
+                                append_rec_list(list_of_squares,
+                                                Rectangle(starting_point, next_point, third_point, forth_point),
+                                                tmp_center_list)
                     if is_in_range_of_a_circle(possible_2, third_point):
                         for forth_point in tmp_intersection:
                             if is_in_range_of_a_circle(possible_2_c, forth_point):
-                                list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
+                                append_rec_list(list_of_squares,
+                                                Rectangle(starting_point, next_point, third_point, forth_point),
+                                                tmp_center_list)
                     if is_in_range_of_a_circle(possible_3, third_point):
                         for forth_point in tmp_intersection:
                             if is_in_range_of_a_circle(possible_3_c, forth_point):
-                                list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
+                                append_rec_list(list_of_squares,
+                                                Rectangle(starting_point, next_point, third_point, forth_point),
+                                                tmp_center_list)
     elapsed_time = time.time() - start_time
-    # print("the time elapsed for categorizing square is " + str(elapsed_time))
+    print("the time elapsed for categorizing square is " + str(elapsed_time))
     return list_of_squares
+
+
+def append_rec_list(list, rect, center_list):
+    list.append(rect)
+    center_list.append(rect.center)
 
 
 def mid_point(point1, point2):
@@ -272,6 +293,10 @@ class Rectangle:
         self.point1 = point1
         self.point2 = point2
         self.point3 = point3
+        if distance_between_points(point1, point2) >= distance_between_points(point1, point3):
+            self.distance = distance_between_points(point1, point3)
+        else:
+            self.distance = distance_between_points(point1, point3)
         if point4 is None:
             self.center = self.find_its_center_3()
         else:
@@ -281,9 +306,9 @@ class Rectangle:
             self.location = location
 
     def find_its_center_3(self):
-        length1 = math.hypot((self.point1.x - self.point2.x), (self.point1.y - self.point2.y))
-        length2 = math.hypot((self.point2.x - self.point3.x), (self.point2.y - self.point3.y))
-        length3 = math.hypot((self.point1.x - self.point3.x), (self.point1.y - self.point3.y))
+        length1 = distance_between_points(self.point1, self.point2)
+        length2 = distance_between_points(self.point2, self.point3)
+        length3 = distance_between_points(self.point1, self.point3)
         if length1 >= length2 and length1 >= length3:
             center = mid_point(self.point1, self.point2)
         elif length2 >= length1 and length2 >= length3:
