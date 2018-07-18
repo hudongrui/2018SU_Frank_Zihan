@@ -14,11 +14,24 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+<<<<<<< HEAD
+      <file leaf-file-name="trainObject.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/trainObject.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="817">
+              <caret line="43" selection-start-line="43" selection-end-line="43" />
+=======
       <file leaf-file-name="interceptHelper.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/interceptHelper.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
             <state relative-caret-position="4590">
               <caret line="306" column="26" lean-forward="true" selection-start-line="306" selection-start-column="26" selection-end-line="306" selection-end-column="26" />
+=======
+            <state relative-caret-position="42">
+              <caret line="162" lean-forward="true" selection-start-line="162" selection-end-line="162" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+>>>>>>> master
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -26,11 +39,45 @@
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
+      <file leaf-file-name="GraspingHelperClass.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/GraspingHelperClass.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="323">
+              <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="transformations.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/transformations.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="377">
+              <caret line="1185" column="28" lean-forward="true" selection-start-line="1185" selection-start-column="28" selection-end-line="1185" selection-end-column="28" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="interceptHelper.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/interceptHelper.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="562">
+              <caret line="302" column="25" selection-start-line="302" selection-start-column="25" selection-end-line="302" selection-end-column="25" />
+=======
       <file leaf-file-name="ProcessImage.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ProcessImage.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
             <state relative-caret-position="195">
               <caret line="13" column="43" selection-start-line="13" selection-start-column="43" selection-end-line="13" selection-end-column="43" />
+=======
+            <state relative-caret-position="330">
+              <caret line="22" column="31" lean-forward="true" selection-start-line="22" selection-start-column="31" selection-end-line="22" selection-end-column="31" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+>>>>>>> master
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -76,14 +123,28 @@
       </list>
     </option>
   </component>
+<<<<<<< HEAD
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="592" />
     <option name="y" value="-4" />
+=======
+<<<<<<< HEAD
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="990" />
+    <option name="y" value="22" />
+    <option name="width" value="930" />
+    <option name="height" value="1058" />
+=======
+  <component name="ProjectFrameBounds" extendedState="4">
+    <option name="x" value="992" />
+    <option name="y" value="24" />
+>>>>>>> master
     <option name="width" value="928" />
     <option name="height" value="1048" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -125,6 +186,31 @@
       </list>
     </option>
   </component>
+  <component name="RunManager">
+    <configuration name="GraspingHelperClass" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="2018SU_Frank_Zihan" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/GraspingHelperClass.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.GraspingHelperClass" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -139,6 +225,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
+<<<<<<< HEAD
     <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
     <editor active="true" />
     <layout>
@@ -147,10 +234,30 @@
       <window_info anchor="right" id="R Packages" order="3" />
       <window_info anchor="right" id="R Graphics" order="3" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+=======
+<<<<<<< HEAD
+    <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
+    <editor active="true" />
+=======
+    <frame x="992" y="24" width="928" height="1056" extended-state="4" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" weight="0.4989224" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+<<<<<<< HEAD
+      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" weight="0.32965517" />
+=======
+      <window_info anchor="right" id="R Packages" />
+      <window_info anchor="right" id="R Graphics" />
+      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Run" order="2" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+>>>>>>> master
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+<<<<<<< HEAD
       <window_info active="true" anchor="bottom" id="Terminal" order="7" visible="true" weight="0.34221312" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
@@ -158,6 +265,29 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+=======
+<<<<<<< HEAD
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.34206897" />
+=======
+      <window_info active="true" anchor="bottom" id="Terminal" order="7" visible="true" weight="0.35232067" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+<<<<<<< HEAD
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+=======
+      <window_info content_ui="combo" id="Project" order="0" weight="0.4989224" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+>>>>>>> master
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Find" order="1" />
@@ -189,7 +319,17 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+<<<<<<< HEAD
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+=======
       <option name="time" value="1" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
@@ -260,14 +400,55 @@
     <entry file="file://$PROJECT_DIR$/HoughTZihan.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="266">
+          <caret line="16" column="31" selection-start-line="16" selection-start-column="31" selection-end-line="16" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/trainObject.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="76">
+          <caret line="4" column="12" lean-forward="true" selection-start-line="4" selection-start-column="12" selection-end-line="4" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/interceptHelper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4978">
+          <caret line="262" column="28" lean-forward="true" selection-start-line="262" selection-start-column="28" selection-end-line="262" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HoughTZihan.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
           <caret line="16" column="54" selection-start-line="16" selection-start-column="54" selection-end-line="16" selection-end-column="54" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/HoughTZihan.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="399">
+          <caret line="21" column="16" lean-forward="true" selection-start-line="21" selection-start-column="16" selection-end-line="21" selection-end-column="16" />
+=======
         <state relative-caret-position="240">
           <caret line="16" column="31" selection-start-line="16" selection-start-column="31" selection-end-line="16" selection-end-column="31" />
+<<<<<<< HEAD
+=======
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+>>>>>>> master
         </state>
       </provider>
     </entry>
@@ -276,6 +457,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/trainObject.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="817">
+          <caret line="43" selection-start-line="43" selection-end-line="43" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+=======
         <state relative-caret-position="60">
           <caret line="4" selection-start-line="4" selection-end-line="4" />
         </state>
@@ -312,19 +500,33 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/interceptHelper.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="562">
+          <caret line="302" column="25" selection-start-line="302" selection-start-column="25" selection-end-line="302" selection-end-column="25" />
+=======
         <state relative-caret-position="3825">
           <caret line="262" column="28" lean-forward="true" selection-start-line="262" selection-start-column="28" selection-end-line="262" selection-end-column="28" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
+    <entry file="file://$PROJECT_DIR$/GraspingHelperClass.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+=======
     <entry file="file://$PROJECT_DIR$/HoughTZihan.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="266">
@@ -362,10 +564,17 @@
           <caret line="306" column="26" lean-forward="true" selection-start-line="306" selection-start-column="26" selection-end-line="306" selection-end-column="26" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
+    <entry file="file://$PROJECT_DIR$/transformations.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="377">
+          <caret line="1185" column="28" lean-forward="true" selection-start-line="1185" selection-start-column="28" selection-end-line="1185" selection-end-column="28" />
+=======
     <entry file="file://$PROJECT_DIR$/ProcessImage.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="195">
@@ -373,6 +582,7 @@
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
+>>>>>>> c7c454069a551118b996f5a7632ef7220fccab1b
         </state>
       </provider>
     </entry>
