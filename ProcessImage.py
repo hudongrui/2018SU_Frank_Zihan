@@ -11,6 +11,7 @@ from skimage import io
 # TODO: Remove Shadow of the blocks
 # TODO: Improve Extend Lines Method
 # TODO: Improve Accuracy for finding edges shared by two blocks
+# TODO: Allow Debug Mode to display picture
 ##################################################################
 
 # Get the path of the training set
@@ -32,9 +33,9 @@ img_filtered = iH.rm_shadow(img_filtered)
 
 cv2.imshow("Removed Background", img_filtered)
 # cv2.imshow("Mask Image", mask)
-cv2.waitKey()
+# cv2.waitKey()
 img_shadowless = iH.rm_shadow(img)
-kernel = np.ones((5, 5), np.uint8)
+kernel = np.ones((1, 1), np.uint8)
 img_erosion = cv2.erode(img_filtered, kernel, iterations=1)
 img_dilation = cv2.dilate(img_erosion, kernel, iterations=2)
 # 20 50 50
@@ -43,13 +44,13 @@ img_blurred_bilateral = cv2.bilateralFilter(img_dilation, 9, 75, 75)
 # img_blurred_bilateral = img_filtered
 
 cv2.imshow("Preprocessed Image", img_blurred_bilateral)
-cv2.waitKey()
+# cv2.waitKey()
 edges = cv2.Canny(img_blurred_bilateral, 50, 200)
-edges = cv2.Canny(img_filtered, 50, 200)
+edges = cv2.Canny(img_filtered, 150, 200)
 
 cv2.imshow("Canny Edges", edges)
 # lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=20, maxLineGap=60)
-lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=30, maxLineGap=40)
+lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=10, maxLineGap=40)
 
 unext_img = img.copy()
 
@@ -74,9 +75,9 @@ for line in lines.copy():
     c_x = int((new_line[0][0] + new_line[0][2])/2)
     c_y = int((new_line[0][1] + new_line[0][3])/2)
 
-    cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
+    # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
     line_cnt = line_cnt + 1
-    cv2.imshow("Extend the lines", ext_img)
+    # cv2.imshow("Extend the lines", ext_img)
 
 intersections = []
 i = 0
@@ -100,9 +101,14 @@ intersections = iH.rm_nearby_intersect(intersections)
 found_rect = iH.categorize_rect(intersections)
 found_rect_centers = iH.rm_duplicates(found_rect, intersections)
 
+# Remove intersections that are formed by two adjacent blocks located roughly one block away
+found_rect_centers = iH.rm_false_positive(found_rect_centers, img_blurred_bilateral)
+
+# Display Results
 number_of_center = 0
 height, width, _ = img.shape
 blank_image = np.zeros((height, width, 3), np.uint8)
+
 for point in intersections:
     cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
 for center in found_rect_centers:

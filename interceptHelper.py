@@ -215,6 +215,7 @@ def rm_shadow(image):
     return image
 
 
+# This method is currently unused, substituted by cv2.subtract
 def rm_background(img, mask):
     h, w, _ = img.shape
     # print(str(img[h//2, w//2]))
@@ -228,6 +229,19 @@ def rm_background(img, mask):
                 img[y, x] = [0, 0, 0]
 
     return img
+
+
+def rm_false_positive(rect_centers, img):
+    img_gray = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2GRAY)
+    centers = []
+    for rect in rect_centers:
+        # print(img_gray[int(rect.y), int(rect.x)])
+        # print("at (" + str(int(rect.y)) + ", " + str(int(rect.x)) + ")")
+        if np.any(img_gray[int(rect.y), int(rect.x)] != 0):
+            # print("False Positive at (" + str(int(rect.x)) + ", " + str(int(rect.y)) + ")")
+            centers.append(rect)
+
+    return centers
 
 
 class Intersect:
@@ -289,7 +303,7 @@ def categorize_rect(intersections):
                             if is_in_range_of_a_circle(possible_3_c, forth_point):
                                 list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
     elapsed_time = time.time() - start_time
-    # print("the time elapsed for categorizing square is " + str(elapsed_time))
+    print("the time elapsed for categorizing square is " + str(elapsed_time))
     return list_of_squares
 
 
