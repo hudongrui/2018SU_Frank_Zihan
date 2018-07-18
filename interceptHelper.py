@@ -45,13 +45,13 @@ def check_intersect(line_1, line_2):
     if m1 == m2:
         # print("Same Slope")
         return None, None, None, False
-    elif m1 == -float('Inf') and abs(m2) <= 0.1:
+    elif abs(m1) == float('Inf') and abs(m2) <= 0.1:
         if pt3[0] <= pt1[0] <= pt4[0] and min(pt1[1], pt2[1]) <= pt3[1] <= max(pt1[1], pt2[1]):
             x_intersect = pt1[0]
             y_intersect = pt3[1]
             theta = 90
             return x_intersect, y_intersect, theta, True
-    elif abs(m1) <= 0.1 and m2 == -float('Inf'):
+    elif abs(m1) <= 0.1 and abs(m2) == float('Inf'):
         if pt1[0] <= pt3[0] <= pt2[0] and min(pt3[1], pt4[1]) <= pt1[1] <= max(pt3[1], pt4[1]):
             x_intersect = pt3[0]
             y_intersect = pt1[1]
@@ -92,13 +92,15 @@ def extend_line(line):
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
     # TODO: Adjust the following threshold to pass the lines
     one_block_len = 65
-    ratio = float((one_block_len - length) / length)
-    if one_block_len <= length <= 1.3 * one_block_len:
-        # print("One Block")
-        return line
-    elif length > 1.3 * one_block_len:
+    ratio = float(abs(1.6 * (one_block_len - length) / length))
+    if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
-        ratio = float((2 * one_block_len - length) / length)
+        return line
+    elif 0.8 * one_block_len < length < 1.2 * one_block_len:
+        # print("One Block")
+        ratio = float(abs(5 * (one_block_len - length) / length))
+    elif length < 0.8 * one_block_len:
+        ratio = float(abs((1.6 * one_block_len - length) / length))
 
         # TODO: Extends lines based on its length, might need change ratio
         # ratio = 0.6
@@ -113,8 +115,9 @@ def extend_line(line):
         y1_p = y1 - delta_y
         y2_p = y2 + delta_y
     extended = [x1_p, y1_p, x2_p, y2_p]
+    # print("Original Length is " + str(length))
     # Extended_Length = int(math.sqrt((x2_p - x1_p) ** 2 + (y2_p - y1_p) ** 2))
-    # print("Ratio is: " + str(ratio))
+    # # print("Ratio is: " + str(ratio))
     # print("Extended Length is: " + str(Extended_Length))
     return [extended]
     # return line
@@ -171,12 +174,28 @@ def rm_nearby_intersect(intersections):
 #     # apply gamma correction using the lookup table
 #     return cv2.LUT(image, table)
 
-def rm_duplicates(rects):
+def rm_duplicates(rects, intersections):
+
+    def is_near(ctr, intersects):
+        bol = False
+        for index in intersects:
+            # print(str(abs(ctr.x - index.y)) + " and " + str)
+            if abs(ctr.x - index.x) <= 25 and abs(ctr.y - index.y) <= 25:
+                bol = True
+                break
+        return bol
+
+    # for rect in rects:
+    #     rect_center = rect.center
+    #     if is_near(rect_center, intersections):
+    #         rects.remove(rect)
+
     centers = []
     for rect in rects:
         rect_center = rect.center
-        if rect_center not in centers:
-            centers.append(rect_center)
+        if not is_near(rect_center, centers):
+            if not is_near(rect_center, intersections):
+                centers.append(rect_center)
     return centers
 
 
@@ -188,12 +207,27 @@ def rm_shadow(image):
         for x in range(w):
             pixel = image[y, x]
             r, g, b = pixel[0], pixel[1], pixel[2]
-            lim = 90
+            lim = 75
 
             if r < lim and g < lim and b < lim:
                 image[y, x] = [0,0,0]
 
     return image
+
+
+def rm_background(img, mask):
+    h, w, _ = img.shape
+    # print(str(img[h//2, w//2]))
+    for y in range(h):
+        for x in range(w):
+            p_img = img[y, x]
+            p_mask = mask[y, x]
+            r, g, b = [abs(i - j) for i, j in zip(p_img, p_mask)]
+            t = 40
+            if r < t and g < t and b < t:
+                img[y, x] = [0, 0, 0]
+
+    return img
 
 
 class Intersect:
