@@ -32,16 +32,6 @@ debugMode = 0
 # TODO: try to figure out the Quaternion matrix mathematically
 dQ = [-0.7218173645115756, -0.6913802266664445, 0.014645313419448478, 0.027542499143427157]
 
-# global block_number
-# block_number = None
-#
-#
-# def handle_input_exception():
-#     global block_number
-#     block_number = None
-#     print("Invalid entry, please try again.")
-
-
 moved_times = 0
 square_list = 0
 
