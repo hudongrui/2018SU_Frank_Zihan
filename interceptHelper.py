@@ -192,8 +192,8 @@ def is_near(ctr, intersects):
     return bol
 
 
-# TODO: I don't understand what are you trying to do here......,please explain current the code does not work due to the rm_duplicates method is returning intercept. Can you change that to rect?
-def rm_duplicates(rects, intersections):
+# TODO: Input List of rectangle, Output is list of rectangle with duplicate removed
+def rm_duplicates(rects):
     # for rect in rects:
     #     rect_center = rect.center
     #     if is_near(rect_center, intersections):
@@ -202,7 +202,6 @@ def rm_duplicates(rects, intersections):
     for rect in rects:
         rect_center = rect.center
         if not is_near(rect_center, rect.center):
-            if not is_near(rect_center, intersections):
                 output.append(rect_center)
     return output
 
@@ -437,7 +436,7 @@ def square_img_to_centers_list(img):
             j += 1
         i += 1
     intersections = rm_nearby_intersect(intersections)
-    found_rect = rm_duplicates(categorize_rect(intersections), intersections)
+    found_rect = rm_duplicates(categorize_rect(intersections))
 
     number_of_center = 0
     height, width, _ = img.shape
