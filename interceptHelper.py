@@ -176,6 +176,7 @@ def rm_nearby_intersect(intersections):
 #     # apply gamma correction using the lookup table
 #     return cv2.LUT(image, table)
 
+# TODO: you can use is_in_range_of_a_circle() method instead
 def is_near(ctr, intersects):
     bol = False
     for index in intersects:
