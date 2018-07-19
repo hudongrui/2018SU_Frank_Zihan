@@ -45,13 +45,13 @@ def check_intersect(line_1, line_2):
     if m1 == m2:
         # print("Same Slope")
         return None, None, None, False
-    elif m1 == -float('Inf') and abs(m2) <= 0.1:
+    elif abs(m1) == float('Inf') and abs(m2) <= 0.1:
         if pt3[0] <= pt1[0] <= pt4[0] and min(pt1[1], pt2[1]) <= pt3[1] <= max(pt1[1], pt2[1]):
             x_intersect = pt1[0]
             y_intersect = pt3[1]
             theta = 90
             return x_intersect, y_intersect, theta, True
-    elif abs(m1) <= 0.1 and m2 == -float('Inf'):
+    elif abs(m1) <= 0.1 and abs(m2) == float('Inf'):
         if pt1[0] <= pt3[0] <= pt2[0] and min(pt3[1], pt4[1]) <= pt1[1] <= max(pt3[1], pt4[1]):
             x_intersect = pt3[0]
             y_intersect = pt1[1]
@@ -91,14 +91,16 @@ def extend_line(line):
     x1, y1, x2, y2 = line[0]
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
     # TODO: Adjust the following threshold to pass the lines
-    one_block_len = 90
-    ratio = float(2.5 * (one_block_len - length) / length)
-    if one_block_len <= length <= 1.5 * one_block_len:
-        # print("One Block")
-        return line
-    elif length > 1.5 * one_block_len:
+    one_block_len = 65
+    ratio = float(abs(1.6 * (one_block_len - length) / length))
+    if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
-        ratio = float((2 * one_block_len - length) / length)
+        return line
+    elif 0.8 * one_block_len < length < 1.2 * one_block_len:
+        # print("One Block")
+        ratio = float(abs(5 * (one_block_len - length) / length))
+    elif length < 0.8 * one_block_len:
+        ratio = float(abs((1.6 * one_block_len - length) / length))
 
         # TODO: Extends lines based on its length, might need change ratio
         # ratio = 0.6
@@ -113,36 +115,37 @@ def extend_line(line):
         y1_p = y1 - delta_y
         y2_p = y2 + delta_y
     extended = [x1_p, y1_p, x2_p, y2_p]
-    Extended_Length = int(math.sqrt((x2_p - x1_p) ** 2 + (y2_p - y1_p) ** 2))
-    # print("Ratio is: " + str(ratio))
+    # print("Original Length is " + str(length))
+    # Extended_Length = int(math.sqrt((x2_p - x1_p) ** 2 + (y2_p - y1_p) ** 2))
+    # # print("Ratio is: " + str(ratio))
     # print("Extended Length is: " + str(Extended_Length))
     return [extended]
     # return line
 
 
-# def increase_contrast(img):
-#     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-#     cv2.imshow("lab", lab)
-#
-#     # -----Splitting the LAB image to different channels-------------------------
-#     l, a, b = cv2.split(lab)
-#     cv2.imshow('l_channel', l)
-#     cv2.imshow('a_channel', a)
-#     cv2.imshow('b_channel', b)
-#
-#     # -----Applying CLAHE to L-channel-------------------------------------------
-#     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-#     cl = clahe.apply(l)
-#     cv2.imshow('CLAHE output', cl)
-#
-#     # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-#     limg = cv2.merge((cl, a, b))
-#     cv2.imshow('limg', limg)
-#
-#     # -----Converting image from LAB Color model to RGB model--------------------
-#     final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-#
-#     return final
+def increase_contrast(img):
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    cv2.imshow("lab", lab)
+
+    # -----Splitting the LAB image to different channels-------------------------
+    l, a, b = cv2.split(lab)
+    cv2.imshow('l_channel', l)
+    cv2.imshow('a_channel', a)
+    cv2.imshow('b_channel', b)
+
+    # -----Applying CLAHE to L-channel-------------------------------------------
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+    cv2.imshow('CLAHE output', cl)
+
+    # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
+    limg = cv2.merge((cl, a, b))
+    cv2.imshow('limg', limg)
+
+    # -----Converting image from LAB Color model to RGB model--------------------
+    final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+    return final
 
 
 def rm_nearby_intersect(intersections):
@@ -171,29 +174,79 @@ def rm_nearby_intersect(intersections):
 #     # apply gamma correction using the lookup table
 #     return cv2.LUT(image, table)
 
-def rm_duplicates(rects):
+def rm_duplicates(rects, intersections):
+
+    def is_near(ctr, intersects):
+        bol = False
+        for index in intersects:
+            # print(str(abs(ctr.x - index.y)) + " and " + str)
+            if abs(ctr.x - index.x) <= 25 and abs(ctr.y - index.y) <= 25:
+                bol = True
+                break
+        return bol
+
+    # for rect in rects:
+    #     rect_center = rect.center
+    #     if is_near(rect_center, intersections):
+    #         rects.remove(rect)
+
     centers = []
     for rect in rects:
         rect_center = rect.center
-        if rect_center not in centers:
-            centers.append(rect_center)
+        if not is_near(rect_center, centers):
+            if not is_near(rect_center, intersections):
+                centers.append(rect_center)
     return centers
 
 
 def rm_shadow(image):
+    image = image.copy()
     h, w = image.shape[0], image.shape[1]
 
     for y in range(h):
         for x in range(w):
             pixel = image[y, x]
             r, g, b = pixel[0], pixel[1], pixel[2]
-            lim_min = 60
-            lim_max = 100
+            # This is the limiting threshold that differentiate black and noise
+            lim = 105
+            max_value = max([r, g, b])
+            min_value = min([r, g, b])
 
-            if lim_min < r < lim_max and lim_min < g < lim_max and lim_min < b < lim_max:
-                image[y, x] = [150, 150, 150]
+            if r < lim and g < lim and b < lim:
+                # Base on the fact that noise's rgb values stays around
+                if max_value - min_value < 20:
+                    image[y, x] = [0,0,0]
 
     return image
+
+
+# This method is currently unused, substituted by cv2.subtract
+def rm_background(img, mask):
+    h, w, _ = img.shape
+    # print(str(img[h//2, w//2]))
+    for y in range(h):
+        for x in range(w):
+            p_img = img[y, x]
+            p_mask = mask[y, x]
+            r, g, b = [abs(i - j) for i, j in zip(p_img, p_mask)]
+            t = 40
+            if r < t and g < t and b < t:
+                img[y, x] = [0, 0, 0]
+
+    return img
+
+
+def rm_false_positive(rect_centers, img):
+    img_gray = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2GRAY)
+    centers = []
+    for rect in rect_centers:
+        # print(img_gray[int(rect.y), int(rect.x)])
+        # print("at (" + str(int(rect.y)) + ", " + str(int(rect.x)) + ")")
+        if np.any(img_gray[int(rect.y), int(rect.x)] != 0):
+            # print("False Positive at (" + str(int(rect.x)) + ", " + str(int(rect.y)) + ")")
+            centers.append(rect)
+
+    return centers
 
 
 class Intersect:
@@ -217,15 +270,26 @@ class Line:
 def is_in_range_of_a_circle(point1, point2, radius_threshold=None):
     if radius_threshold is None:
         radius_threshold = 15
-    return math.hypot((point2.x - point1.x), (point2.y - point1.y)) < radius_threshold
+    return distance_between_points(point1, point2) < radius_threshold
+
+
+def distance_between_points(point1, point2):
+    return math.hypot((point2.x - point1.x), (point2.y - point1.y))
 
 
 def categorize_rect(intersections):
     start_time = time.time()
+    tmp_center_list = []
     list_of_squares = []
     tmp_intersection = intersections
     for starting_point in tmp_intersection:
         for next_point in tmp_intersection:
+            # TODO: fix this bug -- Zihan
+            # if len(tmp_center_list) > 2:
+            #     standard_length = tmp_center_list[math.trunc(len(tmp_center_list) / 2) - 1].length
+            #     if distance_between_points(starting_point, next_point) > standard_length * 1.5 or \
+            #             distance_between_points(starting_point, next_point) < standard_length / 1.5:
+            #         break
             if starting_point != next_point:
                 base_line = Line(starting_point, next_point)
                 possible_1 = Intersect(starting_point.x - math.sin(base_line.theta) * base_line.length, starting_point.y
@@ -245,18 +309,30 @@ def categorize_rect(intersections):
                     if is_in_range_of_a_circle(possible_1, third_point):
                         for forth_point in tmp_intersection:
                             if is_in_range_of_a_circle(possible_1_c, forth_point):
-                                list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
+                                append_rec_list(list_of_squares,
+                                                Rectangle(starting_point, next_point, third_point, forth_point),
+                                                tmp_center_list)
                     if is_in_range_of_a_circle(possible_2, third_point):
                         for forth_point in tmp_intersection:
                             if is_in_range_of_a_circle(possible_2_c, forth_point):
-                                list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
+                                append_rec_list(list_of_squares,
+                                                Rectangle(starting_point, next_point, third_point, forth_point),
+                                                tmp_center_list)
                     if is_in_range_of_a_circle(possible_3, third_point):
                         for forth_point in tmp_intersection:
                             if is_in_range_of_a_circle(possible_3_c, forth_point):
-                                list_of_squares.append(Rectangle(starting_point, next_point, third_point, forth_point))
+                                append_rec_list(list_of_squares,
+                                                Rectangle(starting_point, next_point, third_point, forth_point),
+                                                tmp_center_list)
     elapsed_time = time.time() - start_time
-    # print("the time elapsed for categorizing square is " + str(elapsed_time))
+    print("the time elapsed for categorizing square is " + str(elapsed_time))
     return list_of_squares
+
+
+# TODO: fix this bug -- Zihan
+def append_rec_list(output_list, rect, center_list):
+    output_list.append(rect)
+    center_list.append(rect.center)
 
 
 def mid_point(point1, point2):
@@ -272,6 +348,10 @@ class Rectangle:
         self.point1 = point1
         self.point2 = point2
         self.point3 = point3
+        if distance_between_points(point1, point2) >= distance_between_points(point1, point3):
+            self.distance = distance_between_points(point1, point3)
+        else:
+            self.distance = distance_between_points(point1, point3)
         if point4 is None:
             self.center = self.find_its_center_3()
         else:
@@ -281,9 +361,9 @@ class Rectangle:
             self.location = location
 
     def find_its_center_3(self):
-        length1 = math.hypot((self.point1.x - self.point2.x), (self.point1.y - self.point2.y))
-        length2 = math.hypot((self.point2.x - self.point3.x), (self.point2.y - self.point3.y))
-        length3 = math.hypot((self.point1.x - self.point3.x), (self.point1.y - self.point3.y))
+        length1 = distance_between_points(self.point1, self.point2)
+        length2 = distance_between_points(self.point2, self.point3)
+        length3 = distance_between_points(self.point1, self.point3)
         if length1 >= length2 and length1 >= length3:
             center = mid_point(self.point1, self.point2)
         elif length2 >= length1 and length2 >= length3:
