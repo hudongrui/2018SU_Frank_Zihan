@@ -397,8 +397,6 @@ class Rectangle:
         self.index = index
 
 
-
-
 def square_img_to_centers_list(img):
     img_shadowless = rm_shadow(img)
     kernel = np.ones((5, 5), np.uint8)

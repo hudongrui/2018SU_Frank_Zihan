@@ -39,7 +39,7 @@ number_of_blocks_left = 100
 result_block_list = []
 block_index = 0
 
-while square_list is not None and number_of_blocks_left == 0:
+while square_list is not None and number_of_blocks_left != 0:
     # Pre-grasping joint angles
     pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109375, 0.4400439453125,
                      1.5005537109375,
@@ -55,8 +55,8 @@ while square_list is not None and number_of_blocks_left == 0:
         if debugMode == 2 or debugMode == -1:
             cv2.imshow("Only the dots", img)
             cv2.waitKey()
-            objLoc, new_frame = Gp.detect_block(block_number, frame)
-            cv2.imshow("Image Captured", new_frame)
+            # objLoc, new_frame = Gp.detect_block(block_number, frame)
+            # cv2.imshow("Image Captured", new_frame)
         square_list = iH.square_img_to_centers_list(img)
         number_of_blocks_left = len(square_list)
 
