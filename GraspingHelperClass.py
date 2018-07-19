@@ -496,7 +496,7 @@ def load_images_from_folder(folder):
     return images
 
 
-def detect_block(block_num, image):
+def detect_block(image):
     img_show = image.copy()
 
     templates = load_images_from_folder("/home/team18/Frank_Ray_Zihan/Templates")

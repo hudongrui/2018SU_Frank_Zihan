@@ -89,6 +89,11 @@ def check_intersect(line_1, line_2):
         return None, None, None, False
 
 
+def inf_ext_line(line):
+    x1, y1, x2, y2 = line[0]
+    
+
+
 def extend_line(line):
     x1, y1, x2, y2 = line[0]
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
@@ -127,22 +132,22 @@ def extend_line(line):
 
 def increase_contrast(img):
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-    cv2.imshow("lab", lab)
+    # cv2.imshow("lab", lab)
 
     # -----Splitting the LAB image to different channels-------------------------
     l, a, b = cv2.split(lab)
-    cv2.imshow('l_channel', l)
-    cv2.imshow('a_channel', a)
-    cv2.imshow('b_channel', b)
+    # cv2.imshow('l_channel', l)
+    # cv2.imshow('a_channel', a)
+    # cv2.imshow('b_channel', b)
 
     # -----Applying CLAHE to L-channel-------------------------------------------
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
     cl = clahe.apply(l)
-    cv2.imshow('CLAHE output', cl)
+    # cv2.imshow('CLAHE output', cl)
 
     # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
     limg = cv2.merge((cl, a, b))
-    cv2.imshow('limg', limg)
+    # cv2.imshow('limg', limg)
 
     # -----Converting image from LAB Color model to RGB model--------------------
     final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
@@ -243,10 +248,9 @@ def rm_false_positive(rect_centers, img):
     img_gray = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2GRAY)
     centers = []
     for rect in rect_centers:
-        # print(img_gray[int(rect.y), int(rect.x)])
-        # print("at (" + str(int(rect.y)) + ", " + str(int(rect.x)) + ")")
-        if np.any(img_gray[int(rect.y), int(rect.x)] != 0):
-            # print("False Positive at (" + str(int(rect.x)) + ", " + str(int(rect.y)) + ")")
+        print(img_gray[int(rect.y), int(rect.x)])
+        print("at (" + str(int(rect.y)) + ", " + str(int(rect.x)) + ")")
+        if np.any(img_gray[int(rect.y), int(rect.x)] > 10):
             centers.append(rect)
 
     return centers

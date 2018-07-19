@@ -55,7 +55,7 @@ while square_list is not None and number_of_blocks_left != 0:
         if debugMode == 2 or debugMode == -1:
             cv2.imshow("Only the dots", img)
             cv2.waitKey()
-            # objLoc, new_frame = Gp.detect_block(block_number, frame)
+            # objLoc, new_frame = Gp.detect_block(frame)
             # cv2.imshow("Image Captured", new_frame)
         square_list = iH.square_img_to_centers_list(img)
         number_of_blocks_left = len(square_list)
