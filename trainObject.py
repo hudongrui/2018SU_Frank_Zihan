@@ -25,7 +25,7 @@ headDisplay = head.HeadDisplay()
 # 1     -- matrix debugging
 # 2     -- edge detection debug
 
-debugMode = 0
+debugMode = 2
 ##################################################################################
 
 # this is the our desired Quaternion matrix
@@ -50,7 +50,7 @@ while square_list is not None and number_of_blocks_left != 0:
     Gp.move(limb, pre_grasp_pos, 0.2)
     square_list = None
 
-    while square_list is None and not debugMode:
+    while square_list is None:
         img = Gp.take_picture(0, 30)
         if debugMode == 2 or debugMode == -1:
             cv2.imshow("Only the dots", img)
@@ -87,11 +87,11 @@ while square_list is not None and number_of_blocks_left != 0:
 
     square_list = iH.square_img_to_centers_list(frame)
 
-    print("found square position: ", square_list[0].getCenterX, square_list[0].getCenterY, "\n")
+    print("found square position: ", square_list[0].getCenterX(), square_list[0].getCenterY(), "\n")
     H, W, Ang = gi.predictGraspOnImage(frame, square_list[0].getCenter)
     print("found the best H and W: ", H, W)
 
-    worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_list[0].getCenterX, square_list[0].getCenterY)
+    worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_list[0].getCenterX(), square_list[0].getCenterY())
     Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
     rospy.sleep(1)
 

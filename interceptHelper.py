@@ -15,6 +15,8 @@ import time
 # 2     -- edge detection debug
 
 debugMode = 2
+
+
 ##################################################################################
 
 #########################################################
@@ -159,8 +161,8 @@ def rm_nearby_intersect(intersections):
                     x2, y2 = point_2.x, point_2.y
                     if abs(x1 - x2) <= 15 and abs(y1 - y2) <= 15:
                         intersections.remove(point_2)
-                j = j + 1
-            i = i + 1
+                j += 1
+            i += 1
     return intersections
 
 
@@ -174,29 +176,29 @@ def rm_nearby_intersect(intersections):
 #     # apply gamma correction using the lookup table
 #     return cv2.LUT(image, table)
 
+def is_near(ctr, intersects):
+    bol = False
+    for index in intersects:
+        # print(str(abs(ctr.x - index.y)) + " and " + str)
+        if abs(ctr.x - index.x) <= 25 and abs(ctr.y - index.y) <= 25:
+            bol = True
+            break
+    return bol
+
+
+# TODO: I don't understand what are you trying to do here......,please explain current the code does not work due to the rm_duplicates method is returning intercept. Can you change that to rect?
 def rm_duplicates(rects, intersections):
-
-    def is_near(ctr, intersects):
-        bol = False
-        for index in intersects:
-            # print(str(abs(ctr.x - index.y)) + " and " + str)
-            if abs(ctr.x - index.x) <= 25 and abs(ctr.y - index.y) <= 25:
-                bol = True
-                break
-        return bol
-
     # for rect in rects:
     #     rect_center = rect.center
     #     if is_near(rect_center, intersections):
     #         rects.remove(rect)
-
-    centers = []
+    output = []
     for rect in rects:
         rect_center = rect.center
-        if not is_near(rect_center, centers):
+        if not is_near(rect_center, rect.center):
             if not is_near(rect_center, intersections):
-                centers.append(rect_center)
-    return centers
+                output.append(rect_center)
+    return output
 
 
 def rm_shadow(image):
@@ -215,7 +217,7 @@ def rm_shadow(image):
             if r < lim and g < lim and b < lim:
                 # Base on the fact that noise's rgb values stays around
                 if max_value - min_value < 20:
-                    image[y, x] = [0,0,0]
+                    image[y, x] = [0, 0, 0]
 
     return image
 
@@ -377,24 +379,30 @@ class Rectangle:
         y = [p.y for p in self.p]
         return Intersect(sum(x) / len(x), sum(y) / len(y))
 
-    def getLocation(self):
-        return self.location
+    @classmethod
+    def getLocation(cls):
+        return cls.location
 
-    def getCenterX(self):
-        return self.center.x
+    @classmethod
+    def getCenterX(cls):
+        return cls.center.x
 
-    def getCenterY(self):
-        return self.center.y
+    @classmethod
+    def getCenterY(cls):
+        return cls.center.y
 
-    def getCenter(self):
-        return self.center
+    @classmethod
+    def getCenter(cls):
+        return cls.center
 
-    def setLocation(self, pCoordinate, qCoordinate):
-        self.location = {"p_x": pCoordinate[0], "p_y": pCoordinate[1], "p_z": pCoordinate[2],
-                         "q_x": qCoordinate[0], "q_y": qCoordinate[1], "q_z": qCoordinate[2], "q_w": qCoordinate[3]}
+    @classmethod
+    def setLocation(cls, pCoordinate, qCoordinate):
+        cls.location = {"p_x": pCoordinate[0], "p_y": pCoordinate[1], "p_z": pCoordinate[2],
+                        "q_x": qCoordinate[0], "q_y": qCoordinate[1], "q_z": qCoordinate[2], "q_w": qCoordinate[3]}
 
-    def setIndex(self, index):
-        self.index = index
+    @classmethod
+    def setIndex(cls, index):
+        cls.index = index
 
 
 def square_img_to_centers_list(img):
@@ -424,21 +432,23 @@ def square_img_to_centers_list(img):
             j += 1
         i += 1
     intersections = rm_nearby_intersect(intersections)
-    found_rect = categorize_rect(intersections)
-    found_rect_centers = rm_duplicates(found_rect)
+    found_rect = rm_duplicates(categorize_rect(intersections), intersections)
 
     number_of_center = 0
     height, width, _ = img.shape
     blank_image = np.zeros((height, width, 3), np.uint8)
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
-    for center in found_rect_centers:
+    for rect in found_rect:
         number_of_center += 1
-        cv2.circle(blank_image, (int(center[0]), int(center[1])), 7, (0, 255, 255), -1)
+        cv2.circle(blank_image, (int(rect.getCenterX), int(rect.getCenterY)), 7, (0, 255, 255), -1)
+
+    cv2.imshow("debug image", blank_image)
+    cv2.waitKey()
     print(number_of_center)
     if number_of_center == 0:
         return None
     if debugMode == 2 or debugMode == -1:
         cv2.imshow("Only the dots", blank_image)
         cv2.waitKey()
-    return found_rect_centers
+    return found_rect
