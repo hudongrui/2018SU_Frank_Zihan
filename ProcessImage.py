@@ -75,6 +75,9 @@ for line in lines.copy():
     # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
     line_cnt = line_cnt + 1
 
+# TODO:
+# ext_lines = iH.rm_line_duplicates(ext_lines)
+
 cv2.imshow("Extend the lines", ext_img)
 
 intersections = []
@@ -99,7 +102,7 @@ intersections = iH.rm_nearby_intersect(intersections)
 found_rect = iH.categorize_rect(intersections)
 # print("Found " + str(len(found_rect)) + "Rectangle")
 
-found_rect = iH.rm_duplicates(found_rect, intersections)
+found_rect = iH.rm_duplicates(found_rect)
 
 # Remove intersections that are formed by two adjacent blocks located roughly one block away
 found_rect_centers = iH.rm_false_positive(found_rect, contrast)

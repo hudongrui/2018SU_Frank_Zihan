@@ -36,10 +36,10 @@ def check_intersect(line_1, line_2):
 
     # Calculate slope and y-intersect of each line
     m1 = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
-    b1 = pt1[1] - pt1[0] * m1
+    b1 = round(pt1[1] - pt1[0] * m1, 10)
 
     m2 = (pt4[1] - pt3[1]) / (pt4[0] - pt3[0])
-    b2 = pt3[1] - pt3[0] * m2
+    b2 = round(pt3[1] - pt3[0] * m2, 10)
 
     # Ignore warning when getting a infinity slope
     warnings.filterwarnings("ignore")
@@ -90,8 +90,26 @@ def check_intersect(line_1, line_2):
         return None, None, None, False
 
 
-def inf_ext_line(line):
-    x1, y1, x2, y2 = line[0]
+def rm_line_duplicates(lines):
+
+    for line_1 in lines:
+        pt1 = (line_1[0], line_1[1])
+        pt2 = (line_1[2], line_1[3])
+        # Calculate slope and y-intersect of each line
+        m1 = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
+        b1 = round(pt1[1] - pt1[0] * m1, 10)
+
+        for line_2 in lines:
+            # Endpoints of the second line
+            pt3 = (line_2[0], line_2[1])
+            pt4 = (line_2[2], line_2[3])
+            m2 = (pt4[1] - pt3[1]) / (pt4[0] - pt3[0])
+            b2 = round(pt3[1] - pt3[0] * m2, 10)
+
+            if abs(m1 - m2) < 0.1 and abs(b1 - b2) < 50:
+                lines.remove(line_2)
+
+    return lines
 
 
 def extend_line(line):
@@ -102,14 +120,15 @@ def extend_line(line):
     ratio = float(abs(1.6 * (one_block_len - length) / length))
     if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
-        return line
+        ratio  = float(abs(0.7 * (one_block_len - length) / length))
+        # return line
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
         # print("One Block")
         # 5
         ratio = float(abs(5 * (one_block_len - length) / length))
     elif length < 0.8 * one_block_len:
         # 1.6
-        ratio = float(abs((1.6 * one_block_len - length) / length))
+        ratio = float(abs((1.2 * one_block_len - length) / length))
 
         # TODO: Extends lines based on its length, might need change ratio
         # ratio = 0.6
@@ -164,9 +183,7 @@ def rm_nearby_intersect(intersections):
             j = 0
             for point_2 in intersections:
                 if i < j:
-                    x1, y1 = point_1.x, point_1.y
-                    x2, y2 = point_2.x, point_2.y
-                    if abs(x1 - x2) <= 15 and abs(y1 - y2) <= 15:
+                    if is_in_range_of_a_circle(point_1, point_2, radius_threshold=20):
                         intersections.remove(point_2)
                 j += 1
             i += 1
@@ -201,7 +218,7 @@ def rm_duplicates(rects):
     output = [copy_of_list[0]]
     for rect in copy_of_list:
         for compare_item in output:
-            if is_in_range_of_a_circle(rect.center, compare_item.center, radius_threshold=10):
+            if is_in_range_of_a_circle(rect.center, compare_item.center, radius_threshold=25):
                 boo = True
         if boo is False:
             output.append(rect)
@@ -333,15 +350,20 @@ def categorize_rect(intersections):
                                 append_rec_list(list_of_squares,
                                                 Rectangle(starting_point, next_point, third_point, forth_point),
                                                 tmp_center_list)
-    list_of_squares = sorted(list_of_squares, key=lambda rect: rect.distance)
-    temp_list = copy.deepcopy(list_of_squares)
-    standard_length = temp_list[math.trunc(len(temp_list) / 2) - 1].distance
-    for rect in temp_list:
-        if rect.distance > standard_length * 1.5 or rect.distance < standard_length / 1.5:
-            temp_list.remove(rect)
+
+    # list_of_squares = sorted(list_of_squares, key=lambda rect: rect.getDistance())
+    # temp_list = copy.deepcopy(list_of_squares)
+    temp_list = []
+    # standard_length = temp_list[0].getDistance()
+    # print("the length of the smalles square is: ", standard_length)
+    for rect in list_of_squares:
+        if 60 < rect.distance < 90:
+            temp_list.append(rect)
+
+    # rm_duplicates(list_of_squares)
     elapsed_time = time.time() - start_time
     print("the time elapsed for categorizing square is " + str(elapsed_time))
-    return temp_list
+    return list_of_squares
 
 
 # TODO: fix this bug -- Zihan
@@ -427,6 +449,9 @@ class Rectangle:
     def setIndex(self, index):
         self.index = index
 
+    def getDistance(self):
+        return self.distance
+
     def getAngle(self):
         # TODO: Two possible solution, to select a smart one though, work on it later
         line1 = Line(self.point1, self.point2)
@@ -469,7 +494,8 @@ def square_img_to_centers_list(img):
             j += 1
         i += 1
     intersections = rm_nearby_intersect(intersections)
-    found_rect = rm_duplicates(categorize_rect(intersections))
+    found_rect = categorize_rect(intersections)
+    # found_rect = rm_duplicates()
 
     number_of_center = 0
     height, width, _ = img.shape
