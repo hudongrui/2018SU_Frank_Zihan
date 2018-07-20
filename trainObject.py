@@ -26,7 +26,7 @@ headDisplay = head.HeadDisplay()
 # 2     -- edge detection debug
 # 3     -- grasp angle debug -- from Zihan: don't use it
 
-debugMode = 3
+debugMode = 0
 ##################################################################################
 
 # this is the our desired Quaternion matrix
@@ -94,10 +94,14 @@ while square_list is not None and number_of_blocks_left != 0:
     # print("found square position: ", square_list[0].getCenterX(), square_list[0].getCenterY(), "\n")
     H, W, Ang = gi.predictGraspOnImage(frame, [square_list[0].getCenter().x, square_list[0].getCenter().y])
     # print("found the best H and W: ", H, W)
-    print("grasp master predict", Ang)
+
+    if debugMode == 3:
+        print("grasp master predict", Ang)
     worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_list[0].getCenterX(), square_list[0].getCenterY())
     Ang = square_list[0].getAngle()
-    print("my predict", Ang)
+
+    if debugMode == 3:
+        print("my predict", Ang)
     Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
     rospy.sleep(1)
 

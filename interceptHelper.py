@@ -15,7 +15,7 @@ import copy
 # 1     -- matrix debugging
 # 2     -- edge detection debug
 
-debugMode = 2
+debugMode = 0
 
 
 ##################################################################################

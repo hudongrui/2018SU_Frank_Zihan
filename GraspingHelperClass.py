@@ -29,7 +29,7 @@ from intera_core_msgs.srv import (
 # 2     -- edge detection debug
 # 3     -- grasp angle debug -- from Zihan: don't use it
 
-debugMode = 3
+debugMode = 0
 ##################################################################################
 
 
