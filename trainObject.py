@@ -109,7 +109,7 @@ while square_list is not None and number_of_blocks_left != 0:
         break
 
 # TODO: change this so that placing the block is not hardcoded
-    movingLoc = [0.83, 0 + 0.05, 0.02 + 0.04 * moved_times]
+    movingLoc = [0.83, 0 + 0.05, 0.02 + 0.045 * moved_times]
     drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                       p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                       q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
@@ -130,7 +130,6 @@ while square_list is not None and number_of_blocks_left != 0:
     block_index += 1
     number_of_blocks_left -= 1
 
-    if debugMode == 3:
-        Gp.move(limb, safe_move_r2l, 0.5)
+Gp.move(limb, safe_move_r2l, 0.5)
 
 

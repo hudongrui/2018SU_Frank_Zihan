@@ -557,7 +557,7 @@ def square_img_to_centers_list(img):
     # cv2.imshow("Closing", closing)
     # cv2.waitKey()
 
-    contrast = iH.increase_contrast(closing)
+    contrast = increase_contrast(closing)
     cv2.imshow("Increast Contrast", contrast)
     # cv2.waitKey()
 
@@ -581,7 +581,7 @@ def square_img_to_centers_list(img):
     line_cnt = 0
 
     for line in lines.copy():
-        new_line = iH.extend_line(line)
+        new_line = extend_line(line)
         ext_lines.append(new_line)
 
         # Draw Lines after extension
@@ -604,9 +604,9 @@ def square_img_to_centers_list(img):
         j = 0
         for line_2 in ext_lines:
             if i < j:
-                x_center, y_center, theta, found = iH.check_intersect(line_1[0], line_2[0])
+                x_center, y_center, theta, found = check_intersect(line_1[0], line_2[0])
                 if found:
-                    new_point = iH.Intersect(x_center, y_center, theta=theta)
+                    new_point = Intersect(x_center, y_center, theta=theta)
                     intersections.append(new_point)
             j += 1
         i += 1
@@ -624,7 +624,7 @@ def square_img_to_centers_list(img):
     found_rect = rm_close_to_intersects(found_rect, intersections)
 
     # Remove intersections that are formed by two adjacent blocks located roughly one block away
-    found_rect_centers = rm_false_positive(found_rect, contrast)
+    found_rect = rm_false_positive(found_rect, contrast)
 
     # Display Results
     number_of_center = 0
@@ -633,12 +633,13 @@ def square_img_to_centers_list(img):
 
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
-    for index in found_rect_centers:
+    for index in found_rect:
         number_of_center += 1
         cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
-    print("Found " + str(len(found_rect_centers)) + " blocks in the frame")
+    print("Found " + str(len(found_rect)) + " blocks in the frame")
     if number_of_center == 0:
         print("Could not find any blocks.")
 
     cv2.imshow("Only the dots", blank_image)
     cv2.waitKey()
+    return found_rect
