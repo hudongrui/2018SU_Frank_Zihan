@@ -118,6 +118,9 @@ for point in intersections:
 for index in found_rect_centers:
     number_of_center += 1
     cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+
+for rect in found_rect:
+    rect.drawOutline(blank_image)
 print("Found " + str(len(found_rect_centers)) + " blocks in the frame")
 if number_of_center == 0:
     print("Could not find any blocks.")

@@ -373,13 +373,17 @@ def categorize_rect(intersections):
     temp_list = []
     # standard_length = temp_list[0].getDistance()
     # print("the length of the smalles square is: ", standard_length)
+    print("detect ", len(list_of_squares), " of squares")
     for rect in list_of_squares:
-        if 60 < rect.distance < 90:
+        # if 60 < rect.distance < 90:
+        if rect.distance < 10:
             temp_list.append(rect)
+    print("there are ", len(temp_list), " left after removing 0 length")
 
-    # rm_duplicates(list_of_squares)
-    elapsed_time = time.time() - start_time
-    print("the time elapsed for categorizing square is " + str(elapsed_time))
+    list_of_squares = rm_duplicates(list_of_squares)
+    if debugMode == 0:
+        elapsed_time = time.time() - start_time
+        print("the time elapsed for categorizing square is " + str(elapsed_time))
     return list_of_squares
 
 
@@ -425,6 +429,7 @@ class Rectangle:
         if point4 is None:
             self.center = self.find_its_center_3()
         else:
+            self.point4 = point4
             self.p = [point1, point2, point3, point4]
             self.center = self.find_its_center_4()
         if location is not None:
@@ -482,6 +487,11 @@ class Rectangle:
         else:
             output = theta1
         return output
+
+    def drawOutline(self, image):
+        color = (255, 0, 255)
+        cv2.line(image, (self.point1.x, self.point1.y), (self.point4.x, self.point4.y), color, 1)
+        cv2.line(image, (self.point2.x, self.point2.y), (self.point3.x, self.point3.y), color, 1)
 
 
 # def square_img_to_centers_list(img):
