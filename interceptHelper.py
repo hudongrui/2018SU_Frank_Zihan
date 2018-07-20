@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import time
 import copy
+from skimage import io
 
 ##################################################################################
 # debugMode helper
@@ -117,18 +118,18 @@ def extend_line(line):
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
     # TODO: Adjust the following threshold to pass the lines
     one_block_len = 65
-    ratio = float(abs(1.6 * (one_block_len - length) / length))
+    ratio = float(abs(1.8 * (one_block_len - length) / length))
     if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
-        ratio  = float(abs(0.7 * (one_block_len - length) / length))
+        ratio  = float(abs(0.8 * (one_block_len - length) / length))
         # return line
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
         # print("One Block")
         # 5
-        ratio = float(abs(5 * (one_block_len - length) / length))
+        ratio = float(abs(10 * (one_block_len - length) / length))
     elif length < 0.8 * one_block_len:
         # 1.6
-        ratio = float(abs((1.2 * one_block_len - length) / length))
+        ratio = float(abs((1.3 * one_block_len - length) / length))
 
         # TODO: Extends lines based on its length, might need change ratio
         # ratio = 0.6
@@ -224,6 +225,22 @@ def rm_duplicates(rects):
             output.append(rect)
         boo = False
     return output
+
+
+def rm_close_to_intersects(rects, intersections):
+    list = []
+    boo = False
+    for rect in rects:
+        point_1 = rect.center
+        for intersect in intersections:
+            point_2 = intersect
+            if is_in_range_of_a_circle(point_1, point_2, radius_threshold=25):
+                boo = True
+        if boo is False:
+                list.append(rect)
+        boo = False
+    return list
+
 
 
 def rm_shadow(image):
@@ -467,49 +484,151 @@ class Rectangle:
         return output
 
 
+# def square_img_to_centers_list(img):
+#     img_shadowless = rm_shadow(img)
+#     kernel = np.ones((5, 5), np.uint8)
+#     img_erosion = cv2.erode(img_shadowless, kernel, iterations=1)
+#     img_dilation = cv2.dilate(img_erosion, kernel, iterations=2)
+#     img_blurred_bilateral = cv2.bilateralFilter(img_dilation, 20, 50, 50)
+#     edges = cv2.Canny(img_blurred_bilateral, 200, 300)
+#     # cv2.imshow("edges", edges)
+#     # lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=20, maxLineGap=60)
+#     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=30, maxLineGap=40)
+#     ext_lines = []
+#     for line in lines.copy():
+#         new_line = extend_line(line)
+#         ext_lines.append(new_line)
+#     intersections = []
+#     i = 0
+#     for line_1 in ext_lines:
+#         j = 0
+#         for line_2 in ext_lines:
+#             if i < j:
+#                 x_center, y_center, theta, found = check_intersect(line_1[0], line_2[0])
+#                 if found:
+#                     new_point = Intersect(x_center, y_center, theta=theta)
+#                     intersections.append(new_point)
+#             j += 1
+#         i += 1
+#     intersections = rm_nearby_intersect(intersections)
+#     found_rect = categorize_rect(intersections)
+#     # found_rect = rm_duplicates()
+#
+#     number_of_center = 0
+#     height, width, _ = img.shape
+#     blank_image = np.zeros((height, width, 3), np.uint8)
+#     for point in intersections:
+#         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
+#     for rect in found_rect:
+#         number_of_center += 1
+#         cv2.circle(blank_image, (int(rect.getCenterX()), int(rect.getCenterY())), 7, (0, 255, 255), -1)
+#
+#     if number_of_center == 0:
+#         return None
+#
+#     if debugMode == 2 or debugMode == -1:
+#         cv2.imshow("Only the dots", blank_image)
+#         cv2.waitKey()
+#     return found_rect
+
 def square_img_to_centers_list(img):
-    img_shadowless = rm_shadow(img)
+    mask = io.imread("Background.jpg")
+
+    img_filtered = cv2.subtract(mask, img)
+
+    img_filtered = rm_shadow(img_filtered)
+
+    # cv2.imshow("Removed Background", img_filtered)
+    # cv2.imshow("Mask Image", mask)
+    # cv2.waitKey()
+
     kernel = np.ones((5, 5), np.uint8)
-    img_erosion = cv2.erode(img_shadowless, kernel, iterations=1)
-    img_dilation = cv2.dilate(img_erosion, kernel, iterations=2)
-    img_blurred_bilateral = cv2.bilateralFilter(img_dilation, 20, 50, 50)
-    edges = cv2.Canny(img_blurred_bilateral, 200, 300)
-    # cv2.imshow("edges", edges)
-    # lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=20, maxLineGap=60)
-    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=30, maxLineGap=40)
+    closing = cv2.morphologyEx(img_filtered, cv2.MORPH_CLOSE, kernel)
+    # cv2.imshow("Closing", closing)
+    # cv2.waitKey()
+
+    contrast = iH.increase_contrast(closing)
+    cv2.imshow("Increast Contrast", contrast)
+    # cv2.waitKey()
+
+    edges = cv2.Canny(contrast, 200, 200)
+    # edges = cv2.Canny(img_filtered, 150, 200)
+
+    cv2.imshow("Canny Edges", edges)
+    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=25, minLineLength=12, maxLineGap=25)
+
+    unext_img = img.copy()
+
+    for new_line in lines:
+        # Draw Lines after extension
+        cv2.line(unext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
+
+    cv2.imshow("Originally detected lines", unext_img)
+
     ext_lines = []
+    ext_img = img.copy()
+
+    line_cnt = 0
+
     for line in lines.copy():
-        new_line = extend_line(line)
+        new_line = iH.extend_line(line)
         ext_lines.append(new_line)
+
+        # Draw Lines after extension
+        cv2.line(ext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
+
+        c_x = int((new_line[0][0] + new_line[0][2]) / 2)
+        c_y = int((new_line[0][1] + new_line[0][3]) / 2)
+
+        # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
+        line_cnt = line_cnt + 1
+
+    # TODO: Remove Duplicate Lines for Robustness
+    # ext_lines = iH.rm_line_duplicates(ext_lines)
+
+    cv2.imshow("Extend the lines", ext_img)
+
     intersections = []
     i = 0
     for line_1 in ext_lines:
         j = 0
         for line_2 in ext_lines:
             if i < j:
-                x_center, y_center, theta, found = check_intersect(line_1[0], line_2[0])
+                x_center, y_center, theta, found = iH.check_intersect(line_1[0], line_2[0])
                 if found:
-                    new_point = Intersect(x_center, y_center, theta=theta)
+                    new_point = iH.Intersect(x_center, y_center, theta=theta)
                     intersections.append(new_point)
             j += 1
         i += 1
+
+    # x, y, theta, bol = iH.check_intersect(ext_lines[3][0], ext_lines[6][0])
+    #
+    # if bol:
+    #     print("Found intersection at (" + str(x) + ", " + str(y) + ")")
+
     intersections = rm_nearby_intersect(intersections)
     found_rect = categorize_rect(intersections)
-    # found_rect = rm_duplicates()
+    # print("Found " + str(len(found_rect)) + "Rectangle")
 
+    found_rect = rm_duplicates(found_rect)
+    found_rect = rm_close_to_intersects(found_rect, intersections)
+
+    # Remove intersections that are formed by two adjacent blocks located roughly one block away
+    found_rect_centers = rm_false_positive(found_rect, contrast)
+
+    # Display Results
     number_of_center = 0
     height, width, _ = img.shape
     blank_image = np.zeros((height, width, 3), np.uint8)
+
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
-    for rect in found_rect:
+    for index in found_rect_centers:
         number_of_center += 1
-        cv2.circle(blank_image, (int(rect.getCenterX()), int(rect.getCenterY())), 7, (0, 255, 255), -1)
-
+        cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+    print("Found " + str(len(found_rect_centers)) + " blocks in the frame")
     if number_of_center == 0:
-        return None
+        print("Could not find any blocks.")
 
-    if debugMode == 2 or debugMode == -1:
-        cv2.imshow("Only the dots", blank_image)
-        cv2.waitKey()
-    return found_rect
+    cv2.imshow("Only the dots", blank_image)
+    cv2.waitKey()
