@@ -126,12 +126,12 @@ def extend_line(line):
         ratio  = float(abs(0.8 * (one_block_len - length) / length))
         # return line
     elif 0.95 * one_block_len < length < 1.05 * one_block_len:
-        delta_x = 30
-        delta_y = 30
+        delta_x = int(abs(x2 - x1) * 0.5)
+        delta_y = int(abs(y2 - y1) * 0.5)
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
         # print("One Block")
         # 5
-        ratio = float(abs(1 * (one_block_len - length) / length))
+        ratio = float(abs(10 * (one_block_len - length) / length))
     elif length < 0.8 * one_block_len:
         # 1.6
         ratio = float(abs((1.3 * one_block_len - length) / length))

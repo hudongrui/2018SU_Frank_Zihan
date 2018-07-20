@@ -43,13 +43,13 @@ closing = cv2.morphologyEx(img_filtered, cv2.MORPH_CLOSE, kernel)
 # cv2.waitKey()
 
 contrast = iH.increase_contrast(closing)
-cv2.imshow("Increast Contrast", contrast)
+# cv2.imshow("Increast Contrast", contrast)
 # cv2.waitKey()
 
 edges = cv2.Canny(contrast, 200, 200)
 # edges = cv2.Canny(img_filtered, 150, 200)
 
-cv2.imshow("Canny Edges", edges)
+# cv2.imshow("Canny Edges", edges)
 lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=25, minLineLength=12, maxLineGap=25)
 
 unext_img = img.copy()
@@ -128,5 +128,8 @@ print("Found " + str(len(found_rect_centers)) + " blocks in the frame")
 if number_of_center == 0:
     print("Could not find any blocks.")
 
-cv2.imshow("Only the dots", blank_image)
+# cv2.imshow("Only the dots", blank_image)
+
+# Displaying Result
+cv2.imshow("Original Image", img)
 cv2.waitKey()
