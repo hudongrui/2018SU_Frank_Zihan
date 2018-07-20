@@ -49,7 +49,7 @@ contrast = iH.increase_contrast(closing)
 edges = cv2.Canny(contrast, 200, 200)
 # edges = cv2.Canny(img_filtered, 150, 200)
 
-# cv2.imshow("Canny Edges", edges)
+cv2.imshow("Canny Edges", edges)
 lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=25, minLineLength=12, maxLineGap=25)
 
 unext_img = img.copy()
@@ -109,27 +109,40 @@ found_rect = iH.rm_duplicates(found_rect)
 found_rect = iH.rm_close_to_intersects(found_rect, intersections)
 
 # Remove intersections that are formed by two adjacent blocks located roughly one block away
-found_rect_centers = iH.rm_false_positive(found_rect, contrast)
+found_rect = iH.rm_false_positive(found_rect, contrast)
 
 # Display Results
 number_of_center = 0
 height, width, _ = img.shape
-blank_image = np.zeros((height, width, 3), np.uint8)
+# blank_image = np.zeros((height, width, 3), np.uint8)
+blank_image = img.copy()
 
-for point in intersections:
-    cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
-for index in found_rect_centers:
+cv2.imshow("Original Image", img)
+
+# for point in intersections:
+#     cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
+rect_cnt = 0
+for index in found_rect:
     number_of_center += 1
-    cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+    cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 4, (0, 255, 255), -1)
+    cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+    rect_cnt = rect_cnt + 1
 
-for rect in found_rect:
-    rect.drawOutline(blank_image)
-print("Found " + str(len(found_rect_centers)) + " blocks in the frame")
+# for rect in found_rect:
+#     rect.drawDiagonal1(blank_image)
+#     cv2.imshow("1", blank_image)
+#     cv2.waitKey()
+#     cv2.destroyAllWindows()
+#
+#     rect.drawDiagonal2(blank_image)
+#     cv2.imshow("2", blank_image)
+#     cv2.waitKey()
+#     cv2.destroyAllWindows()
+
+
+print("Found " + str(len(found_rect)) + " blocks in the frame")
 if number_of_center == 0:
     print("Could not find any blocks.")
 
-# cv2.imshow("Only the dots", blank_image)
-
-# Displaying Result
-cv2.imshow("Original Image", img)
+cv2.imshow("Detection Result", blank_image)
 cv2.waitKey()
