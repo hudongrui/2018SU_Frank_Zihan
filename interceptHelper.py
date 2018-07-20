@@ -118,23 +118,29 @@ def extend_line(line):
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
     # TODO: Adjust the following threshold to pass the lines
     one_block_len = 65
+    delta_x = 0
+    delta_y = 0
     ratio = float(abs(1.8 * (one_block_len - length) / length))
     if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
         ratio  = float(abs(0.8 * (one_block_len - length) / length))
         # return line
+    elif 0.95 * one_block_len < length < 1.05 * one_block_len:
+        delta_x = 30
+        delta_y = 30
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
         # print("One Block")
         # 5
-        ratio = float(abs(10 * (one_block_len - length) / length))
+        ratio = float(abs(1 * (one_block_len - length) / length))
     elif length < 0.8 * one_block_len:
         # 1.6
         ratio = float(abs((1.3 * one_block_len - length) / length))
 
         # TODO: Extends lines based on its length, might need change ratio
         # ratio = 0.6
-    delta_x = int(abs(x2 - x1) * ratio)
-    delta_y = int(abs(y2 - y1) * ratio)
+    if delta_x == 0 and delta_y == 0:
+        delta_x = int(abs(x2 - x1) * ratio)
+        delta_y = int(abs(y2 - y1) * ratio)
     x1_p = x1 - delta_x
     x2_p = x2 + delta_x
     if y1 > y2:
@@ -558,13 +564,13 @@ def square_img_to_centers_list(img):
     # cv2.waitKey()
 
     contrast = increase_contrast(closing)
-    cv2.imshow("Increast Contrast", contrast)
+    # cv2.imshow("Increast Contrast", contrast)
     # cv2.waitKey()
 
     edges = cv2.Canny(contrast, 200, 200)
     # edges = cv2.Canny(img_filtered, 150, 200)
 
-    cv2.imshow("Canny Edges", edges)
+    # cv2.imshow("Canny Edges", edges)
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=25, minLineLength=12, maxLineGap=25)
 
     unext_img = img.copy()
@@ -573,7 +579,7 @@ def square_img_to_centers_list(img):
         # Draw Lines after extension
         cv2.line(unext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
 
-    cv2.imshow("Originally detected lines", unext_img)
+    # cv2.imshow("Originally detected lines", unext_img)
 
     ext_lines = []
     ext_img = img.copy()
@@ -596,7 +602,7 @@ def square_img_to_centers_list(img):
     # TODO: Remove Duplicate Lines for Robustness
     # ext_lines = iH.rm_line_duplicates(ext_lines)
 
-    cv2.imshow("Extend the lines", ext_img)
+    # cv2.imshow("Extend the lines", ext_img)
 
     intersections = []
     i = 0
@@ -640,6 +646,6 @@ def square_img_to_centers_list(img):
     if number_of_center == 0:
         print("Could not find any blocks.")
 
-    cv2.imshow("Only the dots", blank_image)
-    cv2.waitKey()
+    # cv2.imshow("Only the dots", blank_image)
+    # cv2.waitKey()
     return found_rect

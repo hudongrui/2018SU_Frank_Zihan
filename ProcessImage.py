@@ -9,9 +9,12 @@ from skimage import io
 
 ##################################################################
 # TODO: Remove Shadow of the blocks
-# TODO: Improve Extend Lines Method
 # TODO: Improve Accuracy for finding edges shared by two blocks
 # TODO: Allow Debug Mode to display picture
+# TODO Henry:
+#   decrease dependency && improve the categorize rect method
+#       using the diagonal output to debug
+#
 ##################################################################
 
 # Get the path of the training set
