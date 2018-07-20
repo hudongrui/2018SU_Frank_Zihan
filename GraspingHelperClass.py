@@ -21,7 +21,16 @@ from intera_core_msgs.srv import (
     SolvePositionIKRequest,
 )
 
-debugMode = False
+##################################################################################
+# Debug helper
+# -1    -- enable all debugging feature
+# 0     -- disable debug
+# 1     -- matrix debugging
+# 2     -- edge detection debug
+# 3     -- grasp angle debug -- from Zihan: don't use it
+
+debugMode = 0
+##################################################################################
 
 
 # ======================================================================================
@@ -127,7 +136,7 @@ def pixelToWorld(u, v):
         try:
             # transform from '/gripper' (target) frame to '/base' (source) frame
             (trans, rot) = listener.lookupTransform('/base', '/right_gripper_base', rospy.Time(0))
-            if debugMode:
+            if debugMode == 1:
                 print('trans is', trans)
                 print('rot is', rot)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
@@ -143,13 +152,13 @@ def pixelToWorld(u, v):
     z = trans[2]
     trans = np.array(trans)
     trans.shape = (3, 1)
-    if debugMode:
+    if debugMode == 1:
         print(trans)
     hom_Mtrx_g_b = transformations.quaternion_matrix(rot)
     hom_Mtrx_g_b[0][3] = trans[0]
     hom_Mtrx_g_b[1][3] = trans[1]
     hom_Mtrx_g_b[2][3] = trans[2]
-    if debugMode:
+    if debugMode == 1:
         print("homogeneous transformation from /gripper_base to /base is:")
         print(hom_Mtrx_g_b)
 
@@ -164,20 +173,20 @@ def pixelToWorld(u, v):
     # TODO: change this value to address camera offset in z direction
     hom_Mtrx_c_g[2][3] = 0.07
 
-    if debugMode:
+    if debugMode == 1:
         print("homogeneous transformation from /camera to /gripper_base is:")
         print(hom_Mtrx_c_g)
 
     hom_Mtrx_c_b = np.dot(hom_Mtrx_g_b, hom_Mtrx_c_g)
 
-    if debugMode:
+    if debugMode == 1:
         print("homogeneous transformation from /camera to /base is:")
         print(hom_Mtrx_c_b)
 
     Mtrx_c_b = hom_Mtrx_c_b[:3, :4]
     Mtrx_c_b = np.matrix(Mtrx_c_b)
 
-    if debugMode:
+    if debugMode == 1:
         print("transformation from /camera to /gripper_base is:")
         print(Mtrx_c_b)
 
@@ -194,7 +203,7 @@ def pixelToWorld(u, v):
     camVec = np.concatenate((camMtrxInv * pixVec, one), axis=0)
     worldVec = Mtrx_c_b * camVec
 
-    if debugMode:
+    if debugMode == 1:
         print("camera vector is: ")
         print(camVec)
         print(Mtrx_c_b * camVec)
@@ -304,6 +313,8 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     move(limb, positions=top_grasp_joint, move_speed=0.2)
     rospy.sleep(2)
     move(limb, positions=mid_grasp_joint, move_speed=0.2)
+    if debugMode == 3:
+        return
     move(limb, positions=down_grasp_joint, move_speed=0.2)
     rospy.sleep(2)
     gripper.close()
