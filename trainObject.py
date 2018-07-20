@@ -130,6 +130,7 @@ while square_list is not None and number_of_blocks_left != 0:
     block_index += 1
     number_of_blocks_left -= 1
 
-    Gp.move(limb, safe_move_r2l, 0.5)
+    if debugMode == 3:
+        Gp.move(limb, safe_move_r2l, 0.5)
 
 
