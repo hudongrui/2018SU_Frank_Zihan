@@ -99,7 +99,7 @@ def predictGraspOnImage(I, objLoc):
     # print('displaying image')
     # cv2.imshow('image', I)
     # cv2.waitKey(0)
-    print bestGraspAngle
+    print "the grasping angle that is calculated is ", bestGraspAngle
     return bestH, bestW, bestGraspAngle
     # G.test_close()
 

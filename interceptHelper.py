@@ -6,6 +6,7 @@ import warnings
 import cv2
 import numpy as np
 import time
+import copy
 
 ##################################################################################
 # debugMode helper
@@ -91,7 +92,6 @@ def check_intersect(line_1, line_2):
 
 def inf_ext_line(line):
     x1, y1, x2, y2 = line[0]
-    
 
 
 def extend_line(line):
@@ -194,15 +194,16 @@ def is_near(ctr, intersects):
 
 # TODO: Input List of rectangle, Output is list of rectangle with duplicate removed
 def rm_duplicates(rects):
-    # for rect in rects:
-    #     rect_center = rect.center
-    #     if is_near(rect_center, intersections):
-    #         rects.remove(rect)
-    output = []
-    for rect in rects:
-        rect_center = rect.center
-        if not is_near(rect_center, rect.center):
-                output.append(rect_center)
+    boo = False
+    copy_of_list = copy.deepcopy(rects)
+    output = [copy_of_list[0]]
+    for rect in copy_of_list:
+        for compare_item in output:
+            if is_in_range_of_a_circle(rect.center, compare_item.center, radius_threshold=10):
+                boo = True
+        if boo is False:
+            output.append(rect)
+        boo = False
     return output
 
 
@@ -272,10 +273,16 @@ class Line:
         self.theta = math.atan2((start_point.y - end_point.y), (start_point.x - end_point.x))
         self.length = math.hypot((start_point.x - end_point.x), (start_point.y - end_point.y))
 
+    def getThetaInRad(self):
+        return self.theta
+
+    def getThetaInDeg(self):
+        return self.theta * 180 / 3.14159
+
 
 def is_in_range_of_a_circle(point1, point2, radius_threshold=None):
     if radius_threshold is None:
-        radius_threshold = 15
+        radius_threshold = 20
     return distance_between_points(point1, point2) < radius_threshold
 
 
@@ -345,6 +352,22 @@ def mid_point(point1, point2):
     return Intersect((point1.x + point2.x) / 2, (point1.y + point2.y) / 2)
 
 
+def refine_range(angle, lowerLimit=None, upperLimit=None, modifier=None):
+    # method used for changing angle into range, could be used in other situation
+    if lowerLimit is None:
+        lowerLimit = -90
+    if upperLimit is None:
+        upperLimit = 90
+    if modifier is None:
+        modifier = 180
+
+    if angle < lowerLimit:
+        angle += modifier
+    elif angle > upperLimit:
+        angle -= modifier
+    return angle
+
+
 class Rectangle:
     def __init__(self, point1, point2, point3, point4=None, index=None, location=None):
         # location should be a 3-dimensional matrix that includes x, y, z coordinates of the block
@@ -383,30 +406,38 @@ class Rectangle:
         y = [p.y for p in self.p]
         return Intersect(sum(x) / len(x), sum(y) / len(y))
 
-    @classmethod
-    def getLocation(cls):
-        return cls.location
+    def getLocation(self):
+        return self.location
 
-    @classmethod
-    def getCenterX(cls):
-        return cls.center.x
+    def getCenterX(self):
+        return self.center.x
 
-    @classmethod
-    def getCenterY(cls):
-        return cls.center.y
+    def getCenterY(self):
+        return self.center.y
 
-    @classmethod
-    def getCenter(cls):
-        return cls.center
+    def getCenter(self):
+        return self.center
 
-    @classmethod
-    def setLocation(cls, pCoordinate, qCoordinate):
-        cls.location = {"p_x": pCoordinate[0], "p_y": pCoordinate[1], "p_z": pCoordinate[2],
-                        "q_x": qCoordinate[0], "q_y": qCoordinate[1], "q_z": qCoordinate[2], "q_w": qCoordinate[3]}
+    def setLocation(self, pCoordinate, qCoordinate):
+        self.location = {"p_x": pCoordinate[0], "p_y": pCoordinate[1], "p_z": pCoordinate[2],
+                         "q_x": qCoordinate[0], "q_y": qCoordinate[1], "q_z": qCoordinate[2], "q_w": qCoordinate[3]}
 
-    @classmethod
-    def setIndex(cls, index):
-        cls.index = index
+    def setIndex(self, index):
+        self.index = index
+
+    def getAngle(self):
+        # TODO: Two possible solution, to select a smart one though, work on it later
+        line1 = Line(self.point1, self.point2)
+        line2 = Line(self.point1, self.point3)
+        theta1 = refine_range(line1.getThetaInRad(), -3.1415 / 2, 3.1415 / 2, 3.1415)
+        theta2 = refine_range(line2.getThetaInRad(), -3.1415 / 2, 3.1415 / 2, 3.1415)
+        print("the first option is ", theta1)
+        print("the second option is ", theta2)
+        if abs(theta1) > abs(theta2):
+            output = theta2
+        else:
+            output = theta1
+        return output
 
 
 def square_img_to_centers_list(img):
@@ -445,13 +476,11 @@ def square_img_to_centers_list(img):
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
     for rect in found_rect:
         number_of_center += 1
-        cv2.circle(blank_image, (int(rect.getCenterX), int(rect.getCenterY)), 7, (0, 255, 255), -1)
+        cv2.circle(blank_image, (int(rect.getCenterX()), int(rect.getCenterY())), 7, (0, 255, 255), -1)
 
-    cv2.imshow("debug image", blank_image)
-    cv2.waitKey()
-    print(number_of_center)
     if number_of_center == 0:
         return None
+
     if debugMode == 2 or debugMode == -1:
         cv2.imshow("Only the dots", blank_image)
         cv2.waitKey()
