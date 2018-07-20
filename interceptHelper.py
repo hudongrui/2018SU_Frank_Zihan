@@ -105,8 +105,10 @@ def extend_line(line):
         return line
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
         # print("One Block")
+        # 5
         ratio = float(abs(5 * (one_block_len - length) / length))
     elif length < 0.8 * one_block_len:
+        # 1.6
         ratio = float(abs((1.6 * one_block_len - length) / length))
 
         # TODO: Extends lines based on its length, might need change ratio
@@ -186,14 +188,14 @@ def is_near(ctr, intersects):
     bol = False
     for index in intersects:
         # print(str(abs(ctr.x - index.y)) + " and " + str)
-        if abs(ctr.x - index.x) <= 25 and abs(ctr.y - index.y) <= 25:
+        if is_in_range_of_a_circle(ctr, index.center,radius_threshold=15):
             bol = True
             break
     return bol
 
 
 # TODO: Input List of rectangle, Output is list of rectangle with duplicate removed
-def rm_duplicates(rects):
+def rm_duplicates(rects, intersections):
     # for rect in rects:
     #     rect_center = rect.center
     #     if is_near(rect_center, intersections):
@@ -201,8 +203,9 @@ def rm_duplicates(rects):
     output = []
     for rect in rects:
         rect_center = rect.center
-        if not is_near(rect_center, rect.center):
-                output.append(rect_center)
+        if not is_near(rect_center, rects):
+            if not is_near(rect_center, intersections):
+                output.append(rect)
     return output
 
 
@@ -247,9 +250,9 @@ def rm_false_positive(rect_centers, img):
     img_gray = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2GRAY)
     centers = []
     for rect in rect_centers:
-        print(img_gray[int(rect.y), int(rect.x)])
-        print("at (" + str(int(rect.y)) + ", " + str(int(rect.x)) + ")")
-        if np.any(img_gray[int(rect.y), int(rect.x)] > 10):
+        # print(img_gray[int(rect.y), int(rect.x)])
+        # print("at (" + str(int(rect.center.y)) + ", " + str(int(rect.center.x)) + ")")
+        if np.any(img_gray[int(rect.center.y), int(rect.center.x)] > 10):
             centers.append(rect)
 
     return centers

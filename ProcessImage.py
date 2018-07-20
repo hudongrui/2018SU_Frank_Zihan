@@ -97,10 +97,12 @@ for line_1 in ext_lines:
 
 intersections = iH.rm_nearby_intersect(intersections)
 found_rect = iH.categorize_rect(intersections)
-found_rect_centers = iH.rm_duplicates(found_rect, intersections)
+# print("Found " + str(len(found_rect)) + "Rectangle")
+
+found_rect = iH.rm_duplicates(found_rect, intersections)
 
 # Remove intersections that are formed by two adjacent blocks located roughly one block away
-found_rect_centers = iH.rm_false_positive(found_rect_centers, contrast)
+found_rect_centers = iH.rm_false_positive(found_rect, contrast)
 
 # Display Results
 number_of_center = 0
@@ -109,9 +111,9 @@ blank_image = np.zeros((height, width, 3), np.uint8)
 
 for point in intersections:
     cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
-for center in found_rect_centers:
+for index in found_rect_centers:
     number_of_center += 1
-    cv2.circle(blank_image, (int(center.x), int(center.y)), 7, (0, 255, 255), -1)
+    cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
 print("Found " + str(len(found_rect_centers)) + " blocks in the frame")
 if number_of_center == 0:
     print("Could not find any blocks.")
