@@ -299,12 +299,6 @@ def categorize_rect(intersections):
     tmp_intersection = intersections
     for starting_point in tmp_intersection:
         for next_point in tmp_intersection:
-            # TODO: fix this bug -- Zihan
-            # if len(tmp_center_list) > 2:
-            #     standard_length = tmp_center_list[math.trunc(len(tmp_center_list) / 2) - 1].length
-            #     if distance_between_points(starting_point, next_point) > standard_length * 1.5 or \
-            #             distance_between_points(starting_point, next_point) < standard_length / 1.5:
-            #         break
             if starting_point != next_point:
                 base_line = Line(starting_point, next_point)
                 possible_1 = Intersect(starting_point.x - math.sin(base_line.theta) * base_line.length, starting_point.y
@@ -339,9 +333,15 @@ def categorize_rect(intersections):
                                 append_rec_list(list_of_squares,
                                                 Rectangle(starting_point, next_point, third_point, forth_point),
                                                 tmp_center_list)
+    list_of_squares = sorted(list_of_squares, key=lambda rect: rect.distance)
+    temp_list = copy.deepcopy(list_of_squares)
+    standard_length = temp_list[math.trunc(len(temp_list) / 2) - 1].distance
+    for rect in temp_list:
+        if rect.distance > standard_length * 1.5 or rect.distance < standard_length / 1.5:
+            temp_list.remove(rect)
     elapsed_time = time.time() - start_time
     print("the time elapsed for categorizing square is " + str(elapsed_time))
-    return list_of_squares
+    return temp_list
 
 
 # TODO: fix this bug -- Zihan
@@ -382,7 +382,7 @@ class Rectangle:
         if distance_between_points(point1, point2) >= distance_between_points(point1, point3):
             self.distance = distance_between_points(point1, point3)
         else:
-            self.distance = distance_between_points(point1, point3)
+            self.distance = distance_between_points(point1, point2)
         if point4 is None:
             self.center = self.find_its_center_3()
         else:
