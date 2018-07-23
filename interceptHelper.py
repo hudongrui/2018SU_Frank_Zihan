@@ -62,9 +62,15 @@ def check_intersect(line_1, line_2):
             theta = 90
             return x_intersect, y_intersect, theta, True
 
+    # start_time = time.time()
+
     # Solve for intersection
     x = Symbol('x')
     solution = solve((m1 - m2) * x + b1 - b2, x)
+
+    # elapsed_time = time.time() - start_time
+    # print("the time elapsed for solving intersections is " + str(elapsed_time))
+
     if len(solution) != 1:
         # print("Identical Lines")
         return None, None, None, False
@@ -379,12 +385,12 @@ def categorize_rect(intersections):
     temp_list = []
     # standard_length = temp_list[0].getDistance()
     # print("the length of the smalles square is: ", standard_length)
-    print("detect ", len(list_of_squares), " of squares")
+    # print("detect ", len(list_of_squares), " of squares")
     for rect in list_of_squares:
         # if 60 < rect.distance < 90:
         if rect.distance < 10:
             temp_list.append(rect)
-    print("there are ", len(temp_list), " left after removing 0 length")
+    # print("there are ", len(temp_list), " left after removing 0 length")
 
     list_of_squares = rm_duplicates(list_of_squares)
     if debugMode == 0:
