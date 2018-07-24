@@ -87,12 +87,13 @@ while square_list is not None and number_of_blocks_left != 0:
     Gp.move(limb, positions=moveJoint, move_speed=0.2)
 
     # Retake image about the block for recognition
-    frame = Gp.take_picture(0, 30)
 
-    square_list = iH.square_img_to_centers_list(frame)
+    img = Gp.take_picture(0, 30)
+
+    square_list = iH.square_img_to_centers_list(img)
 
     # print("found square position: ", square_list[0].getCenterX(), square_list[0].getCenterY(), "\n")
-    H, W, Ang = gi.predictGraspOnImage(frame, [square_list[0].getCenter().x, square_list[0].getCenter().y])
+    H, W, Ang = gi.predictGraspOnImage(img, [square_list[0].getCenter().x, square_list[0].getCenter().y])
     # print("found the best H and W: ", H, W)
 
     if debugMode == 3:
@@ -109,7 +110,7 @@ while square_list is not None and number_of_blocks_left != 0:
         break
 
 # TODO: change this so that placing the block is not hardcoded
-    movingLoc = [0.83, 0 + 0.05, 0.02 + 0.045 * moved_times]
+    movingLoc = [0.83, 0 + 0.05, 0.01 + 0.045 * moved_times]
     drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                       p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                       q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
@@ -121,9 +122,8 @@ while square_list is not None and number_of_blocks_left != 0:
     block.setLocation(movingLoc, dQ)
     result_block_list.append(block)
 
-    rospy.sleep(1)
+    rospy.sleep(1.5)
     gripper.open()
-    rospy.sleep(0.5)
 
     # While loop stuff
     moved_times += 1

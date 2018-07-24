@@ -598,10 +598,8 @@ def square_img_to_centers_list(img):
 
         # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
         line_cnt = line_cnt + 1
-
     # TODO: Remove Duplicate Lines for Robustness
     # ext_lines = iH.rm_line_duplicates(ext_lines)
-
     # cv2.imshow("Extend the lines", ext_img)
 
     intersections = []

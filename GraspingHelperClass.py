@@ -165,10 +165,10 @@ def pixelToWorld(u, v):
     # homogeneous transformation from /camera to /gripper
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0])
 
-    # TODO: change this value to address camera offset in x direction
+    # TODO: change this value to address camera offset in x direction -- x is in y direction x increase, y increase
     # hom_Mtrx_c_g[0][3] = 0.06
-    hom_Mtrx_c_g[0][3] = -0.08
-    # TODO: change this value to address camera offset in y direction
+    hom_Mtrx_c_g[0][3] = -0.065
+    # TODO: change this value to address camera offset in y direction -- y is in x direction y increase, x increase
     hom_Mtrx_c_g[1][3] = -0.01
     # TODO: change this value to address camera offset in z direction
     hom_Mtrx_c_g[2][3] = 0.07
