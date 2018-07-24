@@ -98,7 +98,7 @@ while square_list is not None and number_of_blocks_left != 0:
     if debugMode == 3:
         print("grasp master predict", Ang)
     worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_list[0].getCenterX(), square_list[0].getCenterY())
-    Ang = square_list[0].getAngle()
+    Ang = square_list[0].getAngle(square_list)
 
     if debugMode == 3:
         print("my predict", Ang)

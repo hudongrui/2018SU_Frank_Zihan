@@ -6,6 +6,7 @@ import numpy as np
 import time
 import copy
 from skimage import io
+import sys
 
 ##################################################################################
 # debugMode helper
@@ -301,6 +302,7 @@ class Intersect:
             self.category = category
 
 
+# TODO: implement the intercept method into here to improve independence
 class Line:
     def __init__(self, start_point, end_point):
         self.start = start_point
@@ -312,7 +314,7 @@ class Line:
         return self.theta
 
     def getThetaInDeg(self):
-        return self.theta * 180 / 3.14159
+        return self.theta * 180 / math.pi
 
 
 def is_in_range_of_a_circle(point1, point2, radius_threshold=None):
@@ -490,15 +492,24 @@ class Rectangle:
     def getDistance(self):
         return self.distance
 
-    def getAngle(self):
-        # TODO:
+    def getAngle(self, list_of_square):
+        min_distance = sys.maxsize
+        for rect in list_of_square:
+            other_center = rect.center
+            if self.center.x != other_center.x and self.center.y != other_center.y:
+                new_distance = distance_between_points(rect.center, other_center)
+                if new_distance < min_distance:
+                    min_distance = new_distance
+                    min_distance_center = other_center
         line1 = Line(self.point1, self.point2)
         line2 = Line(self.point1, self.point3)
-        theta1 = refine_range(line1.getThetaInRad(), -3.1415 / 2, 3.1415 / 2, 3.1415)
-        theta2 = refine_range(line2.getThetaInRad(), -3.1415 / 2, 3.1415 / 2, 3.1415)
+        correction_line = Line(self.center, min_distance_center)
+        theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+        theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+        correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         print("the first option is ", theta1)
         print("the second option is ", theta2)
-        if abs(theta1) > abs(theta2):
+        if abs(theta1 - correction_theta) > abs(theta2 - correction_theta):
             output = theta2
         else:
             output = theta1
@@ -507,12 +518,15 @@ class Rectangle:
     def drawDiagonal1(self, image):
         color = (255, 0, 255)
         cv2.line(image, (self.point1.x, self.point1.y), (self.point4.x, self.point4.y), color, 1)
+
     def setIndex(self, num):
         self.index = num
 
     def drawDiagonal2(self, image):
         color = (255, 0, 255)
         cv2.line(image, (self.point2.x, self.point2.y), (self.point3.x, self.point3.y), color, 1)
+
+
 def square_img_to_centers_list(img):
     mask = io.imread("Background.jpg")
 
