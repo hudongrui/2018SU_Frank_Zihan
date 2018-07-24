@@ -24,7 +24,7 @@ headDisplay = head.HeadDisplay()
 # 0     -- disable debug
 # 1     -- matrix debugging
 # 2     -- edge detection debug
-# 3     -- grasp angle debug -- from Zihan: don't use it
+# 3     -- grasp angle debug
 
 debugMode = 0
 ##################################################################################
