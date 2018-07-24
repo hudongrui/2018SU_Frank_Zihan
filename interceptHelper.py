@@ -494,22 +494,25 @@ class Rectangle:
 
     def getAngle(self, list_of_square):
         min_distance = sys.maxsize
-        for rect in list_of_square:
-            other_center = rect.center
-            if self.center.x != other_center.x and self.center.y != other_center.y:
-                new_distance = distance_between_points(rect.center, other_center)
-                if new_distance < min_distance:
-                    min_distance = new_distance
-                    min_distance_center = other_center
+        if len(list_of_square) > 1:
+            for rect in list_of_square:
+                other_center = rect.center
+                if self.center.x != other_center.x and self.center.y != other_center.y:
+                    new_distance = distance_between_points(rect.center, other_center)
+                    if new_distance < min_distance:
+                        min_distance = new_distance
+                        min_distance_center = other_center
+            correction_line = Line(self.center, min_distance_center)
+        else:
+            correction_line = Line(self.center, Intersect(0, 0))
         line1 = Line(self.point1, self.point2)
         line2 = Line(self.point1, self.point3)
-        correction_line = Line(self.center, min_distance_center)
         theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         print("the first option is ", theta1)
         print("the second option is ", theta2)
-        if abs(theta1 - correction_theta) > abs(theta2 - correction_theta):
+        if abs(theta1 - correction_theta) < abs(theta2 - correction_theta):
             output = theta2
         else:
             output = theta1
@@ -613,17 +616,24 @@ def square_img_to_centers_list(img):
     # Display Results
     number_of_center = 0
     height, width, _ = img.shape
-    blank_image = np.zeros((height, width, 3), np.uint8)
+    blank_image = img.copy()
 
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
+
+    rect_cnt = 0
     for index in found_rect:
         number_of_center += 1
         cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+        cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
+                cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+        rect_cnt = rect_cnt + 1
     print("Found " + str(len(found_rect)) + " blocks in the frame")
     if number_of_center == 0:
         print("Could not find any blocks.")
 
-    # cv2.imshow("Only the dots", blank_image)
-    # cv2.waitKey()
+    cv2.imshow("Displaying Result", blank_image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
     return found_rect

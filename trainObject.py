@@ -1,14 +1,15 @@
 from __future__ import division
-import subprocess
-import rospy
-import numpy as np
-import interceptHelper as iH
-import graspObjectImageFunc as gi
+
+import sys
+
+import cv2
 import intera_interface
 import intera_interface.head_display as head
-import cv2
+import rospy
+
 import GraspingHelperClass as Gp
-import sys
+import graspObjectImageFunc as gi
+import interceptHelper as iH
 
 rospy.init_node("GraspingDemo")
 global limb
@@ -25,8 +26,9 @@ headDisplay = head.HeadDisplay()
 # 1     -- matrix debugging
 # 2     -- edge detection debug
 # 3     -- grasp angle debug
+# 4     -- collision test w/o breaking the robot
 
-debugMode = 0
+debugMode = 4
 ##################################################################################
 
 # this is the our desired Quaternion matrix
@@ -47,7 +49,7 @@ number_of_blocks_left = 100
 result_block_list = []
 block_index = 0
 
-while square_list is not None and number_of_blocks_left != 0:
+while square_list is not None and number_of_blocks_left != 0 and debugMode != 4:
     # Pre-grasping joint angles
     rospy.sleep(1)
 
@@ -110,7 +112,7 @@ while square_list is not None and number_of_blocks_left != 0:
         break
 
 # TODO: change this so that placing the block is not hardcoded
-    movingLoc = [0.83, 0 + 0.05, 0.01 + 0.045 * moved_times]
+    movingLoc = [0.72, 0 + 0.045, 0 + 0.045 * moved_times]
     drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                       p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                       q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
@@ -132,4 +134,9 @@ while square_list is not None and number_of_blocks_left != 0:
 
 Gp.move(limb, safe_move_r2l, 0.5)
 
+if debugMode == 4:
+    drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=0, p_y=-0.8, p_z=-.2,
+                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+    Gp.move(limb, positions=drop_block_pos, move_speed=0.1)
 
