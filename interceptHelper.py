@@ -1,6 +1,4 @@
 from __future__ import division
-from sympy.solvers import solve
-from sympy import Symbol
 import math
 import warnings
 import cv2
