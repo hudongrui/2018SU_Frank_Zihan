@@ -1,6 +1,4 @@
 from __future__ import division
-from sympy.solvers import solve
-from sympy import Symbol
 import math
 import warnings
 import cv2
@@ -8,6 +6,7 @@ import numpy as np
 import time
 import copy
 from skimage import io
+import sys
 
 ##################################################################################
 # debugMode helper
@@ -37,19 +36,16 @@ def check_intersect(line_1, line_2):
 
     # Calculate slope and y-intersect of each line
     m1 = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
-    b1 = round(pt1[1] - pt1[0] * m1, 10)
+    b1 = round(pt1[1] - pt1[0] * m1, 8)
 
     m2 = (pt4[1] - pt3[1]) / (pt4[0] - pt3[0])
-    b2 = round(pt3[1] - pt3[0] * m2, 10)
+    b2 = round(pt3[1] - pt3[0] * m2, 8)
 
     # Ignore warning when getting a infinity slope
     warnings.filterwarnings("ignore")
 
     # Consider if the lines are horizontal or vertical to cause a non-resolvable slope for intersection
-    if m1 == m2:
-        # print("Same Slope")
-        return None, None, None, False
-    elif abs(m1) == float('Inf') and abs(m2) <= 0.1:
+    if abs(m1) == float('Inf') and abs(m2) <= 0.1:
         if pt3[0] <= pt1[0] <= pt4[0] and min(pt1[1], pt2[1]) <= pt3[1] <= max(pt1[1], pt2[1]):
             x_intersect = pt1[0]
             y_intersect = pt3[1]
@@ -61,20 +57,18 @@ def check_intersect(line_1, line_2):
             y_intersect = pt1[1]
             theta = 90
             return x_intersect, y_intersect, theta, True
-
-    # Solve for intersection
-    x = Symbol('x')
-    solution = solve((m1 - m2) * x + b1 - b2, x)
-    if len(solution) != 1:
-        # print("Identical Lines")
+    elif abs(m1 - m2) < 0.2:
+        # print("Same Slope")
         return None, None, None, False
 
+    solution = (b2 - b1)/(m1 - m2)
+
     # Check if intersects fall in the range of two lines
-    elif pt1[0] <= solution <= pt2[0] and pt3[0] <= solution <= pt4[0]:
+    if pt1[0] <= solution <= pt2[0] and pt3[0] <= solution <= pt4[0]:
         # print("Solution is " + str(float(solution[0])))
 
-        x_intersect = int(solution[0])
-        y_intersect = int(m2 * solution[0] + b2)
+        x_intersect = int(solution)
+        y_intersect = int(m2 * solution + b2)
 
         theta1 = math.atan(m1)
         theta2 = math.atan(m2)
@@ -207,18 +201,18 @@ def rm_nearby_intersect(intersections):
 #     # apply gamma correction using the lookup table
 #     return cv2.LUT(image, table)
 
-# TODO: you can use is_in_range_of_a_circle() method instead
+# DONE: you can use is_in_range_of_a_circle() method instead
 def is_near(ctr, intersects):
     bol = False
     for index in intersects:
         # print(str(abs(ctr.x - index.y)) + " and " + str)
-        if is_in_range_of_a_circle(ctr, index.center,radius_threshold=15):
+        if is_in_range_of_a_circle(ctr, index.center, radius_threshold=15):
             bol = True
             break
     return bol
 
 
-# TODO: Input List of rectangle, Output is list of rectangle with duplicate removed
+# DONE: Input List of rectangle, Output is list of rectangle with duplicate removed
 def rm_duplicates(rects):
     boo = False
     copy_of_list = copy.deepcopy(rects)
@@ -308,6 +302,7 @@ class Intersect:
             self.category = category
 
 
+# TODO: implement the intercept method into here to improve independence
 class Line:
     def __init__(self, start_point, end_point):
         self.start = start_point
@@ -319,7 +314,7 @@ class Line:
         return self.theta
 
     def getThetaInDeg(self):
-        return self.theta * 180 / 3.14159
+        return self.theta * 180 / math.pi
 
 
 def is_in_range_of_a_circle(point1, point2, radius_threshold=None):
@@ -341,6 +336,9 @@ def categorize_rect(intersections):
         for next_point in tmp_intersection:
             if starting_point != next_point:
                 base_line = Line(starting_point, next_point)
+                standard_length = base_line.length
+                if standard_length <= 5:
+                    break
                 possible_1 = Intersect(starting_point.x - math.sin(base_line.theta) * base_line.length, starting_point.y
                                        + math.cos(base_line.theta) * base_line.length)
                 possible_1_c = Intersect(next_point.x - math.sin(base_line.theta) * base_line.length, next_point.y
@@ -355,36 +353,50 @@ def categorize_rect(intersections):
                 possible_3_c = Intersect(midPoint.x + math.sin(base_line.theta) * base_line.length, midPoint.y
                                          - math.cos(base_line.theta) * base_line.length)
                 for third_point in tmp_intersection:
-                    if is_in_range_of_a_circle(possible_1, third_point):
+                    if is_in_range_of_a_circle(possible_1, third_point, standard_length * 0.3):
                         for forth_point in tmp_intersection:
-                            if is_in_range_of_a_circle(possible_1_c, forth_point):
+                            if is_in_range_of_a_circle(possible_1_c, forth_point, standard_length * 0.3):
                                 append_rec_list(list_of_squares,
                                                 Rectangle(starting_point, next_point, third_point, forth_point),
                                                 tmp_center_list)
-                    if is_in_range_of_a_circle(possible_2, third_point):
+                    if is_in_range_of_a_circle(possible_2, third_point, standard_length * 0.3):
                         for forth_point in tmp_intersection:
-                            if is_in_range_of_a_circle(possible_2_c, forth_point):
+                            if is_in_range_of_a_circle(possible_2_c, forth_point, standard_length * 0.3):
                                 append_rec_list(list_of_squares,
                                                 Rectangle(starting_point, next_point, third_point, forth_point),
                                                 tmp_center_list)
-                    if is_in_range_of_a_circle(possible_3, third_point):
+                    if is_in_range_of_a_circle(possible_3, third_point, standard_length * 0.3):
                         for forth_point in tmp_intersection:
-                            if is_in_range_of_a_circle(possible_3_c, forth_point):
+                            if is_in_range_of_a_circle(possible_3_c, forth_point, standard_length * 0.3):
                                 append_rec_list(list_of_squares,
                                                 Rectangle(starting_point, next_point, third_point, forth_point),
                                                 tmp_center_list)
+    list_of_squares = sorted(list_of_squares, key=lambda rect: rect.side_length)
+    temp_list = copy.deepcopy(list_of_squares)
+    standard_length = temp_list[0].side_length
+    for rect in temp_list:
+        if rect.side_length > standard_length * 1.8:
+            temp_list.remove(rect)
+    temp_list = rm_duplicates(temp_list)
+    index = 0
+    for rect in temp_list:
+        rect.setIndex(index)
+        index += 1
+    elapsed_time = time.time() - start_time
+    print("the time elapsed for categorizing square is " + str(elapsed_time))
+    return temp_list
 
     # list_of_squares = sorted(list_of_squares, key=lambda rect: rect.getDistance())
     # temp_list = copy.deepcopy(list_of_squares)
     temp_list = []
     # standard_length = temp_list[0].getDistance()
     # print("the length of the smalles square is: ", standard_length)
-    print("detect ", len(list_of_squares), " of squares")
+    # print("detect ", len(list_of_squares), " of squares")
     for rect in list_of_squares:
         # if 60 < rect.distance < 90:
         if rect.distance < 10:
             temp_list.append(rect)
-    print("there are ", len(temp_list), " left after removing 0 length")
+    # print("there are ", len(temp_list), " left after removing 0 length")
 
     list_of_squares = rm_duplicates(list_of_squares)
     if debugMode == 0:
@@ -429,9 +441,9 @@ class Rectangle:
         self.point2 = point2
         self.point3 = point3
         if distance_between_points(point1, point2) >= distance_between_points(point1, point3):
-            self.distance = distance_between_points(point1, point3)
+            self.side_length = distance_between_points(point1, point3)
         else:
-            self.distance = distance_between_points(point1, point2)
+            self.side_length = distance_between_points(point1, point2)
         if point4 is None:
             self.center = self.find_its_center_3()
         else:
@@ -480,15 +492,24 @@ class Rectangle:
     def getDistance(self):
         return self.distance
 
-    def getAngle(self):
-        # TODO: Two possible solution, to select a smart one though, work on it later
+    def getAngle(self, list_of_square):
+        min_distance = sys.maxsize
+        for rect in list_of_square:
+            other_center = rect.center
+            if self.center.x != other_center.x and self.center.y != other_center.y:
+                new_distance = distance_between_points(rect.center, other_center)
+                if new_distance < min_distance:
+                    min_distance = new_distance
+                    min_distance_center = other_center
         line1 = Line(self.point1, self.point2)
         line2 = Line(self.point1, self.point3)
-        theta1 = refine_range(line1.getThetaInRad(), -3.1415 / 2, 3.1415 / 2, 3.1415)
-        theta2 = refine_range(line2.getThetaInRad(), -3.1415 / 2, 3.1415 / 2, 3.1415)
+        correction_line = Line(self.center, min_distance_center)
+        theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+        theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+        correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         print("the first option is ", theta1)
         print("the second option is ", theta2)
-        if abs(theta1) > abs(theta2):
+        if abs(theta1 - correction_theta) > abs(theta2 - correction_theta):
             output = theta2
         else:
             output = theta1
@@ -498,57 +519,13 @@ class Rectangle:
         color = (255, 0, 255)
         cv2.line(image, (self.point1.x, self.point1.y), (self.point4.x, self.point4.y), color, 1)
 
+    def setIndex(self, num):
+        self.index = num
+
     def drawDiagonal2(self, image):
         color = (255, 0, 255)
         cv2.line(image, (self.point2.x, self.point2.y), (self.point3.x, self.point3.y), color, 1)
 
-
-# def square_img_to_centers_list(img):
-#     img_shadowless = rm_shadow(img)
-#     kernel = np.ones((5, 5), np.uint8)
-#     img_erosion = cv2.erode(img_shadowless, kernel, iterations=1)
-#     img_dilation = cv2.dilate(img_erosion, kernel, iterations=2)
-#     img_blurred_bilateral = cv2.bilateralFilter(img_dilation, 20, 50, 50)
-#     edges = cv2.Canny(img_blurred_bilateral, 200, 300)
-#     # cv2.imshow("edges", edges)
-#     # lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=20, maxLineGap=60)
-#     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=32, minLineLength=30, maxLineGap=40)
-#     ext_lines = []
-#     for line in lines.copy():
-#         new_line = extend_line(line)
-#         ext_lines.append(new_line)
-#     intersections = []
-#     i = 0
-#     for line_1 in ext_lines:
-#         j = 0
-#         for line_2 in ext_lines:
-#             if i < j:
-#                 x_center, y_center, theta, found = check_intersect(line_1[0], line_2[0])
-#                 if found:
-#                     new_point = Intersect(x_center, y_center, theta=theta)
-#                     intersections.append(new_point)
-#             j += 1
-#         i += 1
-#     intersections = rm_nearby_intersect(intersections)
-#     found_rect = categorize_rect(intersections)
-#     # found_rect = rm_duplicates()
-#
-#     number_of_center = 0
-#     height, width, _ = img.shape
-#     blank_image = np.zeros((height, width, 3), np.uint8)
-#     for point in intersections:
-#         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
-#     for rect in found_rect:
-#         number_of_center += 1
-#         cv2.circle(blank_image, (int(rect.getCenterX()), int(rect.getCenterY())), 7, (0, 255, 255), -1)
-#
-#     if number_of_center == 0:
-#         return None
-#
-#     if debugMode == 2 or debugMode == -1:
-#         cv2.imshow("Only the dots", blank_image)
-#         cv2.waitKey()
-#     return found_rect
 
 def square_img_to_centers_list(img):
     mask = io.imread("Background.jpg")
