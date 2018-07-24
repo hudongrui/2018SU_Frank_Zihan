@@ -37,19 +37,16 @@ def check_intersect(line_1, line_2):
 
     # Calculate slope and y-intersect of each line
     m1 = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
-    b1 = round(pt1[1] - pt1[0] * m1, 10)
+    b1 = round(pt1[1] - pt1[0] * m1, 8)
 
     m2 = (pt4[1] - pt3[1]) / (pt4[0] - pt3[0])
-    b2 = round(pt3[1] - pt3[0] * m2, 10)
+    b2 = round(pt3[1] - pt3[0] * m2, 8)
 
     # Ignore warning when getting a infinity slope
     warnings.filterwarnings("ignore")
 
     # Consider if the lines are horizontal or vertical to cause a non-resolvable slope for intersection
-    if m1 == m2:
-        # print("Same Slope")
-        return None, None, None, False
-    elif abs(m1) == float('Inf') and abs(m2) <= 0.1:
+    if abs(m1) == float('Inf') and abs(m2) <= 0.1:
         if pt3[0] <= pt1[0] <= pt4[0] and min(pt1[1], pt2[1]) <= pt3[1] <= max(pt1[1], pt2[1]):
             x_intersect = pt1[0]
             y_intersect = pt3[1]
@@ -61,26 +58,18 @@ def check_intersect(line_1, line_2):
             y_intersect = pt1[1]
             theta = 90
             return x_intersect, y_intersect, theta, True
-
-    # start_time = time.time()
-
-    # Solve for intersection
-    x = Symbol('x')
-    solution = solve((m1 - m2) * x + b1 - b2, x)
-
-    # elapsed_time = time.time() - start_time
-    # print("the time elapsed for solving intersections is " + str(elapsed_time))
-
-    if len(solution) != 1:
-        # print("Identical Lines")
+    elif abs(m1 - m2) < 0.2:
+        # print("Same Slope")
         return None, None, None, False
 
+    solution = (b2 - b1)/(m1 - m2)
+
     # Check if intersects fall in the range of two lines
-    elif pt1[0] <= solution <= pt2[0] and pt3[0] <= solution <= pt4[0]:
+    if pt1[0] <= solution <= pt2[0] and pt3[0] <= solution <= pt4[0]:
         # print("Solution is " + str(float(solution[0])))
 
-        x_intersect = int(solution[0])
-        y_intersect = int(m2 * solution[0] + b2)
+        x_intersect = int(solution)
+        y_intersect = int(m2 * solution + b2)
 
         theta1 = math.atan(m1)
         theta2 = math.atan(m2)
