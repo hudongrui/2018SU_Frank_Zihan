@@ -240,7 +240,7 @@ def rm_close_to_intersects(rects, intersections):
         point_1 = rect.center
         for intersect in intersections:
             point_2 = intersect
-            if is_in_range_of_a_circle(point_1, point_2, radius_threshold=25):
+            if is_in_range_of_a_circle(point_1, point_2, radius_threshold=27):
                 boo = True
         if boo is False:
                 list.append(rect)
@@ -494,9 +494,12 @@ class Rectangle:
             output = theta1
         return output
 
-    def drawOutline(self, image):
+    def drawDiagonal1(self, image):
         color = (255, 0, 255)
         cv2.line(image, (self.point1.x, self.point1.y), (self.point4.x, self.point4.y), color, 1)
+
+    def drawDiagonal2(self, image):
+        color = (255, 0, 255)
         cv2.line(image, (self.point2.x, self.point2.y), (self.point3.x, self.point3.y), color, 1)
 
 
