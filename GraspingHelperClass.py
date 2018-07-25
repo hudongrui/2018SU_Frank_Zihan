@@ -29,7 +29,7 @@ from intera_core_msgs.srv import (
 # 2     -- edge detection debug
 # 3     -- grasp angle debug -- from Zihan: don't use it
 
-debugMode = 0
+debugMode = 3
 ##################################################################################
 
 
@@ -165,13 +165,17 @@ def pixelToWorld(u, v):
     # homogeneous transformation from /camera to /gripper
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0])
 
+    # TODO: ---------------- fuck this shit I am out -------------------------
     # TODO: change this value to address camera offset in x direction -- x is in y direction x increase, y increase
-    # hom_Mtrx_c_g[0][3] = 0.06
-    hom_Mtrx_c_g[0][3] = -0.065
+    # hom_Mtrx_c_g[0][3] = -0.065
+    # hom_Mtrx_c_g[0][3] = -0.07
     # TODO: change this value to address camera offset in y direction -- y is in x direction y increase, x increase
-    hom_Mtrx_c_g[1][3] = -0.01
+    # - 0.03
+    # hom_Mtrx_c_g[1][3] = -0.009
     # TODO: change this value to address camera offset in z direction
-    hom_Mtrx_c_g[2][3] = 0.07
+    # hom_Mtrx_c_g[2][3] = 0.07
+
+    # TODO: ---------------- fuck this shit I am out -------------------------
 
     if debugMode == 1:
         print("homogeneous transformation from /camera to /gripper_base is:")
@@ -216,8 +220,10 @@ def pixelToWorld(u, v):
 
 # ======================================================================================
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
-    y_offset = 0.05
-    x_offset = 0.05
+    # 0.05 both
+    y_offset = -0.063
+    x_offset = -0.028
+
     print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
     print('endEffPos, x: ', endEffPos[0])
@@ -246,7 +252,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     x_target = (endEffPos[0] + x_ref) * 0.5
     y_target = (endEffPos[1] + y_ref) * 0.5
 
-    if table == "1":
+    if table == 1:
         # User left-hand side
         # top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
         #                                     p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.5,
@@ -313,9 +319,9 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     move(limb, positions=top_grasp_joint, move_speed=0.2)
     rospy.sleep(2)
     move(limb, positions=mid_grasp_joint, move_speed=0.2)
+    move(limb, positions=down_grasp_joint, move_speed=0.2)
     if debugMode == 3:
         return
-    move(limb, positions=down_grasp_joint, move_speed=0.2)
     rospy.sleep(2)
     gripper.close()
     rospy.sleep(1)

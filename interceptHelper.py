@@ -7,13 +7,14 @@ import time
 import copy
 from skimage import io
 import sys
-
+import rospy
 ##################################################################################
 # debugMode helper
 # -1    -- enable all debugging feature
 # 0     -- disable debug
 # 1     -- matrix debugging
 # 2     -- edge detection debug
+# 3     -- grasping angle debug
 
 debugMode = 0
 
@@ -509,13 +510,19 @@ class Rectangle:
         line2 = Line(self.point1, self.point3)
         theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
-        correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
-        print("the first option is ", theta1)
-        print("the second option is ", theta2)
-        if abs(theta1 - correction_theta) < abs(theta2 - correction_theta):
-            output = theta2
+        if debugMode == 3:
+            if abs(theta1) > abs(theta2):
+                output = theta2
+            else:
+                output = theta1
         else:
-            output = theta1
+            correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+            print("the first option is ", theta1)
+            print("the second option is ", theta2)
+            if abs(theta1 - correction_theta) < abs(theta2 - correction_theta):
+                output = theta2
+            else:
+                output = theta1
         return output
 
     def drawDiagonal1(self, image):
@@ -530,8 +537,43 @@ class Rectangle:
         cv2.line(image, (self.point2.x, self.point2.y), (self.point3.x, self.point3.y), color, 1)
 
 
-def square_img_to_centers_list(img):
+def find_square_closest_to_center(img, square_list):
+    h, w, _ = img.shape
+    ctr_x, ctr_y = int(w / 2), int(h / 2)
+    dists = []
+
+    for sq in square_list:
+        manhattan_dist = abs(int(sq.getCenterX() - ctr_x)) + abs(int(sq.getCenterY() - ctr_y))
+        dists.append(manhattan_dist)
+
+    toReturn = square_list[dists.index(min(dists))]
+    copy = img.copy()
+
+    # cv2.circle(copy, (int(toReturn.getCenterX()), int(toReturn.getCenterY())),7, (100, 150, 200), -1)
+    # cv2.imshow("Block to Grasp", copy)
+
+    print("Grabbing Block as Labeled. Confirm?")
+    # cv2.waitKey()
+    # rospy.sleep(2)
+    # cv2.destroyAllWindows()
+
+    return toReturn
+
+
+def square_img_to_centers_list(img, square=None):
     mask = io.imread("Background.jpg")
+
+    if square is not None:
+        # For Second Time to Perform Recognition, crop only the center of the image to avoid picking up blocks with angle distortion
+        ctr_x = square.getCenterX()
+        ctr_y = square.getCenterY()
+        dim = int(2 * square.side_length)
+
+        x = int(ctr_x - 0.5 * dim)
+        y = int(ctr_y - 0.5 * dim)
+        l = dim
+        img = img[y: y + l, x:x + l]
+        mask = mask[y: y + l, x:x + l]
 
     img_filtered = cv2.subtract(mask, img)
 
@@ -632,8 +674,17 @@ def square_img_to_centers_list(img):
     if number_of_center == 0:
         print("Could not find any blocks.")
 
-    cv2.imshow("Displaying Result", blank_image)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-
+    # for rect in found_rect:
+    #     rect.drawDiagonal1(blank_image)
+    #     rect.drawDiagonal2(blank_image)
+    #
+    # cv2.imshow("Removed Background", img_filtered)
+    # cv2.imshow("Closing", closing)
+    # cv2.imshow("Increast Contrast", contrast)
+    # cv2.imshow("Canny Edges", edges)
+    # cv2.imshow("Originally detected lines", unext_img)
+    # cv2.imshow("Extend the lines", ext_img)
+    # cv2.imshow("Displaying Result", blank_image)
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
     return found_rect
