@@ -8,6 +8,7 @@ import copy
 from skimage import io
 import sys
 import rospy
+
 ##################################################################################
 # debugMode helper
 # -1    -- enable all debugging feature
@@ -16,7 +17,7 @@ import rospy
 # 2     -- edge detection debug
 # 3     -- grasping angle debug
 
-debugMode = 0
+debugMode = 3
 
 
 ##################################################################################
@@ -62,7 +63,7 @@ def check_intersect(line_1, line_2):
         # print("Same Slope")
         return None, None, None, False
 
-    solution = (b2 - b1)/(m1 - m2)
+    solution = (b2 - b1) / (m1 - m2)
 
     # Check if intersects fall in the range of two lines
     if pt1[0] <= solution <= pt2[0] and pt3[0] <= solution <= pt4[0]:
@@ -87,7 +88,6 @@ def check_intersect(line_1, line_2):
 
 
 def rm_line_duplicates(lines):
-
     for line_1 in lines:
         pt1 = (line_1[0], line_1[1])
         pt2 = (line_1[2], line_1[3])
@@ -118,7 +118,7 @@ def extend_line(line):
     ratio = float(abs(1.8 * (one_block_len - length) / length))
     if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
-        ratio  = float(abs(0.8 * (one_block_len - length) / length))
+        ratio = float(abs(0.8 * (one_block_len - length) / length))
         # return line
     elif 0.95 * one_block_len < length < 1.05 * one_block_len:
         delta_x = int(abs(x2 - x1) * 0.5)
@@ -238,10 +238,9 @@ def rm_close_to_intersects(rects, intersections):
             if is_in_range_of_a_circle(point_1, point_2, radius_threshold=27):
                 boo = True
         if boo is False:
-                list.append(rect)
+            list.append(rect)
         boo = False
     return list
-
 
 
 def rm_shadow(image):
@@ -505,6 +504,7 @@ class Rectangle:
                         min_distance_center = other_center
             correction_line = Line(self.center, min_distance_center)
         else:
+            # correction_line = Line(self.center, Intersect(self.center.x, self.center.y + self.side_length / 2))
             correction_line = Line(self.center, Intersect(0, 0))
         line1 = Line(self.point1, self.point2)
         line2 = Line(self.point1, self.point3)
@@ -517,8 +517,8 @@ class Rectangle:
                 output = theta1
         else:
             correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
-            print("the first option is ", theta1)
-            print("the second option is ", theta2)
+            # print("the first option is ", theta1)
+            # print("the second option is ", theta2)
             if abs(theta1 - correction_theta) < abs(theta2 - correction_theta):
                 output = theta2
             else:
@@ -552,10 +552,10 @@ def find_square_closest_to_center(img, square_list):
     # cv2.circle(copy, (int(toReturn.getCenterX()), int(toReturn.getCenterY())),7, (100, 150, 200), -1)
     # cv2.imshow("Block to Grasp", copy)
 
-    print("Grabbing Block as Labeled. Confirm?")
+    # print("Grabbing Block as Labeled. Confirm?")
     # cv2.waitKey()
     # rospy.sleep(2)
-    # cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
     return toReturn
 
@@ -668,7 +668,7 @@ def square_img_to_centers_list(img, square=None):
         number_of_center += 1
         cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
         cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
-                cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
         rect_cnt = rect_cnt + 1
     print("Found " + str(len(found_rect)) + " blocks in the frame")
     if number_of_center == 0:
@@ -688,3 +688,31 @@ def square_img_to_centers_list(img, square=None):
     # cv2.waitKey()
     # cv2.destroyAllWindows()
     return found_rect
+
+
+# TODO
+def get_joint_angles(x, y, z, theta, dQ):
+    return None
+
+
+def get_location(list_of_coordinate):
+    locations = []
+    for loc in list_of_coordinate:
+        px, py, pz = loc[0], loc[1], loc[2]
+        ctr_x, ctr_y, ctr_z = 0.72, 0.045, 0.001
+        b_len = 0.048
+        x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_len
+        locations.append([x, y, z])
+
+    return locations
+
+
+def drop_destinations():
+    # Program a series of location here for the robot to drop of the block
+    # We construct a new coordinate system where the center drop-off location is origin,
+    # with each unit length of one block length, which is 0.0045m
+
+    # Pyramid
+    preset_1 = [[0, -1, 0], [0, 0, 0], [0, 1, 0], [0, -0.5, 1], [0, 0.5, 1], [0, 0, 2]]
+
+    return get_location(preset_1)

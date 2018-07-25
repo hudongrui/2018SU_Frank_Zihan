@@ -29,7 +29,7 @@ from intera_core_msgs.srv import (
 # 2     -- edge detection debug
 # 3     -- grasp angle debug -- from Zihan: don't use it
 
-debugMode = 3
+debugMode = 0
 ##################################################################################
 
 
@@ -221,8 +221,8 @@ def pixelToWorld(u, v):
 # ======================================================================================
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     # 0.05 both
-    y_offset = -0.063
-    x_offset = -0.028
+    y_offset = -0.04
+    x_offset = -0.02
 
     print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
