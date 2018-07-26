@@ -1,16 +1,20 @@
 from __future__ import division
 
+import copy
 import sys
 
 import cv2
 import intera_interface
 import intera_interface.head_display as head
 import rospy
-import copy
 
 import GraspingHelperClass as Gp
 import graspObjectImageFunc as gi
 import interceptHelper as iH
+
+import transformations as tfs
+import numpy as np
+import math
 
 rospy.init_node("GraspingDemo")
 global limb
@@ -29,6 +33,7 @@ headDisplay = head.HeadDisplay()
 # 3     -- grasp angle debug
 # 4     -- collision test w/o breaking the robot
 # 5     -- Demo Mode
+# 6     -- angle for placing robot
 
 debugMode = 5
 ##################################################################################
@@ -130,6 +135,7 @@ if debugMode == 5:
         movingLoc = drop_off_location
         pre_moving_loc = copy.deepcopy(drop_off_location)
         pre_moving_loc[2] += 0.3
+        dQ = Gp.euler_to_quaternion(pre_moving_loc[3])
         pre_drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                               p_x=pre_moving_loc[0], p_y=pre_moving_loc[1], p_z=pre_moving_loc[2],
                                               q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
@@ -154,6 +160,7 @@ if debugMode == 5:
         moved_times += 1
         block_index += 1
         # number_of_blocks_left -= 1
+
 else:
     while square_list is not None and number_of_blocks_left != 0 and debugMode != 4:
         # Pre-grasping joint angles
@@ -248,7 +255,7 @@ else:
         block_index += 1
     # number_of_blocks_left -= 1
 
-if debugMode != 3:
+if debugMode != 3 and debugMode != 6:
     Gp.move(limb, safe_move_r2l, 0.3)
     rospy.sleep(1)
 

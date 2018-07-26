@@ -699,10 +699,11 @@ def get_location(list_of_coordinate):
     locations = []
     for loc in list_of_coordinate:
         px, py, pz = loc[0], loc[1], loc[2]
+        theta = loc[3] / 180 * np.pi
         ctr_x, ctr_y, ctr_z = 0.72, 0.045, 0.001
         b_len = 0.048
         x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_len
-        locations.append([x, y, z])
+        locations.append([x, y, z, theta])
 
     return locations
 
@@ -713,6 +714,7 @@ def drop_destinations():
     # with each unit length of one block length, which is 0.0045m
 
     # Pyramid
-    preset_1 = [[0, -1, 0], [0, 0, 0], [0, 1, 0], [0, -0.5, 1], [0, 0.5, 1], [0, 0, 2]]
+    preset_1 = [[0, -1, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], [0, -0.5, 1, 0], [0, 0.5, 1, 0], [0, 0, 2, 0]]
+    preset_2 = [[0, 0, 0, 45]]
 
-    return get_location(preset_1)
+    return get_location(preset_2)

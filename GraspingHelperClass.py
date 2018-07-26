@@ -567,3 +567,22 @@ def detect_block(image):
         return None, image
     else:
         return locations[numbers.index(block_num)], img_show
+# ============================================================================================
+
+
+# from Henry & Frank
+def euler_to_quaternion(x=None, y=None, z=None):
+    # Attention all units in radian
+    # x - rotation angle about the x axis (heading)
+    # y - rotation angle about the y axis (attitude)
+    # z - rotation angle about the z axis (bank)
+    if x is None:
+        x = np.pi
+    if y is None:
+        y = 0
+    if z is None:
+        z = np.pi
+    else:
+        z = z - math.pi
+    return transformations.quaternion_from_euler(x, y, z)
+
