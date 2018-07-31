@@ -35,7 +35,7 @@ headDisplay = head.HeadDisplay()
 # 5     -- Demo Mode
 # 6     -- angle for placing robot
 
-debugMode = 5
+debugMode = 0
 ##################################################################################
 
 # this is the our desired Quaternion matrix
@@ -60,9 +60,9 @@ number_of_blocks_left = 100
 result_block_list = []
 block_index = 0
 
+# TODO: below returns a set of coordinates where we want to drop the block.
 task = iH.drop_destinations()
 
-# TODO: Use this for loop for demo ONLY, for other uncomment the while loop below
 if debugMode == 5:
     for drop_off_location in task:
         # Pre-grasping joint angles
@@ -113,24 +113,22 @@ if debugMode == 5:
         H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
         # print("found the best H and W: ", H, W)
 
-        if debugMode == 3:
-            print("grasp master predict", Ang)
+        # if debugMode == 3:
+        #     print("grasp master predict", Ang)
         worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
         print("Matrix" + str(hom_Mtrx_c_b[0]) + " " + str(hom_Mtrx_c_b[1]))
         Ang = square_to_find.getAngle(square_list)
-        if debugMode == 3:
-            print("my predict", Ang)
+        # if debugMode == 3:
+        #     print("my predict", Ang)
         Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
         rospy.sleep(1)
 
-        if debugMode == 3:
-            gripper.close()
-            rospy.sleep(1)
-            gripper.open()
-            Gp.move(limb, pre_grasp_pos, 0.2)
-            break
-
-        # TODO: change this so that placing the block is not hardcoded
+        # if debugMode == 3:
+        #     gripper.close()
+        #     rospy.sleep(1)
+        #     gripper.open()
+        #     Gp.move(limb, pre_grasp_pos, 0.2)
+        #     break
 
         movingLoc = drop_off_location
         pre_moving_loc = copy.deepcopy(drop_off_location)
@@ -228,7 +226,7 @@ else:
             Gp.move(limb, pre_grasp_pos, 0.3)
             break
 
-        # TODO: change this so that placing the block is not hardcoded
+        # TODO: This allows the robot to vertically stack up the blocks
         movingLoc = [0.72, 0 + 0.045, 0.005 + 0.045 * moved_times]
         drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                               p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
@@ -245,7 +243,7 @@ else:
         gripper.open()
         rospy.sleep(1)
 
-        movingLoc = [0.72, 0 + 0.045, 0.25 + 0.045 * moved_times]
+        movingLoc = [0.72, -0.8, 0.25 + 0.2 + 0.045 * moved_times]
         drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                               p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                               q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])

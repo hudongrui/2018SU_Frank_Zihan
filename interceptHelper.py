@@ -17,7 +17,7 @@ import rospy
 # 2     -- edge detection debug
 # 3     -- grasping angle debug
 
-debugMode = 3
+debugMode = 0
 
 
 ##################################################################################
@@ -695,6 +695,7 @@ def get_joint_angles(x, y, z, theta, dQ):
     return None
 
 
+# Calculate actual location in the base-centered coordinate
 def get_location(list_of_coordinate):
     locations = []
     for loc in list_of_coordinate:
@@ -715,6 +716,7 @@ def drop_destinations():
 
     # Pyramid
     preset_1 = [[0, -1, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], [0, -0.5, 1, 0], [0, 0.5, 1, 0], [0, 0, 2, 0]]
+    # 45 degrees rotation clockwise
     preset_2 = [[0, 0, 0, 45]]
 
     return get_location(preset_2)
