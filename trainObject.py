@@ -88,7 +88,7 @@ if debugMode == 5:
             drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                                   p_x=worldVec[0], p_y=worldVec[1], p_z=0.3,
                                                   q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-            Gp.move(limb, positions=drop_block_pos, move_speed=0.2)
+            Gp.move(limb, positions=drop_block_pos, speed_ratio=0.2)
             sys.exit()
             break
         else:
@@ -100,7 +100,7 @@ if debugMode == 5:
                                          # q_x=0, q_y=0, q_z=0, q_w=0)
                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-        Gp.move(limb, positions=moveJoint, move_speed=0.2)
+        Gp.move(limb, positions=moveJoint, speed_ratio=0.2)
 
         # Retake image about the block for recognition
 
@@ -184,7 +184,7 @@ else:
             drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                                   p_x=worldVec[0], p_y=worldVec[1], p_z=0.3,
                                                   q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-            Gp.move(limb, positions=drop_block_pos, move_speed=0.2)
+            Gp.move(limb, positions=drop_block_pos, speed_ratio=0.2)
             sys.exit()
             break
         else:
@@ -196,7 +196,7 @@ else:
                                          # q_x=0, q_y=0, q_z=0, q_w=0)
                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-        Gp.move(limb, positions=moveJoint, move_speed=0.2)
+        Gp.move(limb, positions=moveJoint, speed_ratio=0.2)
 
         # Retake image about the block for recognition
 
@@ -261,9 +261,9 @@ if debugMode == 4:
     still_safe_move = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                            p_x=0, p_y=-0.8, p_z=.1,
                                            q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-    Gp.move(limb, positions=still_safe_move, move_speed=0.2)
+    Gp.move(limb, still_safe_move, 0.2)
     not_safe_move = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                          p_x=0, p_y=-0.8, p_z=-.2,
                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-    Gp.move(limb, positions=not_safe_move, move_speed=0.01)
+    Gp.move(limb, not_safe_move, 0.01)
 

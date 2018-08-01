@@ -21,6 +21,20 @@ from intera_core_msgs.srv import (
     SolvePositionIKRequest,
 )
 
+##############################################
+# added by Zihan
+# import go_to_cartesian_pose as smomo
+from intera_motion_interface import (
+    MotionTrajectory,
+    MotionWaypoint,
+    MotionWaypointOptions
+)
+# from intera_motion_msgs.msg import TrajectoryOptions
+# from geometry_msgs.msg import PoseStamped
+# import PyKDL
+# from tf_conversions import posemath
+###########################################################
+
 ##################################################################################
 # Debug helper
 # -1    -- enable all debugging feature
@@ -107,21 +121,20 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
 
 
 # ======================================================================================
-def move(limb, positions, move_speed):
-    limb.set_joint_position_speed(speed=move_speed)
+def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
+    if accel_ratio is None:
+        accel_ratio = 0.1
 
-    angles = limb.joint_angles()
+    traj = MotionTrajectory(limb=limb)
 
-    angles['right_j0'] = positions[0]
-    angles['right_j1'] = positions[1]
-    angles['right_j2'] = positions[2]
-    angles['right_j3'] = positions[3]
-    angles['right_j4'] = positions[4]
-    angles['right_j5'] = positions[5]
-    angles['right_j6'] = positions[6]
+    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
+                                     max_joint_accel=accel_ratio)
+    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
 
-    limb.move_to_joint_positions(angles)
+    waypoint.set_joint_angles(joint_angles=positions)
+    traj.append_waypoint(waypoint.to_msg())
 
+    traj.send_trajectory(timeout=timeout)
 
 # ======================================================================================
 
@@ -316,16 +329,16 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     mid_grasp_joint = tuple(lstMid)
     down_grasp_joint = tuple(lstDown)
 
-    move(limb, positions=top_grasp_joint, move_speed=0.2)
+    move(limb, positions=top_grasp_joint, speed_ratio=0.2)
     rospy.sleep(2)
-    move(limb, positions=mid_grasp_joint, move_speed=0.2)
-    move(limb, positions=down_grasp_joint, move_speed=0.2)
+    move(limb, positions=mid_grasp_joint, speed_ratio=0.2)
+    move(limb, positions=down_grasp_joint, speed_ratio=0.2)
     if debugMode == 3:
         return
     rospy.sleep(2)
     gripper.close()
     rospy.sleep(1)
-    move(limb, positions=top_grasp_joint, move_speed=0.2)
+    move(limb, positions=top_grasp_joint, speed_ratio=0.2)
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
     print("Completing grasp execute\n------------------------------------------------------")
