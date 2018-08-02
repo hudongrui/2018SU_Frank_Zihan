@@ -3,6 +3,7 @@ from __future__ import division
 import copy
 import sys
 
+
 import cv2
 import intera_interface
 import intera_interface.head_display as head
@@ -12,11 +13,15 @@ import GraspingHelperClass as Gp
 import graspObjectImageFunc as gi
 import interceptHelper as iH
 
-import transformations as tfs
-import numpy as np
-import math
+###############################################################
+# added by Zihan 08/02/2018
+moveComm = Gp.moveit_commander
+moveComm.roscpp_initialize(sys.argv)
+rospy.init_node("FrankZihanSu")
+robot = moveComm.RobotCommander()
+scene = moveComm.PlanningSceneInterface()
+###############################################################
 
-rospy.init_node("GraspingDemo")
 global limb
 limb = intera_interface.Limb('right')
 global gripper
@@ -36,6 +41,11 @@ headDisplay = head.HeadDisplay()
 # 6     -- angle for placing robot
 
 debugMode = 0
+##################################################################################
+
+##################################################################################
+# ~~~~~~~~~~~~~~~~~~ girigiri ai~~~~~~~~~~~~~~~
+crazyMode = True
 ##################################################################################
 
 # this is the our desired Quaternion matrix
@@ -66,7 +76,10 @@ task = iH.drop_destinations()
 if debugMode == 5:
     for drop_off_location in task:
         # Pre-grasping joint angles
-        Gp.move(limb, pre_grasp_pos, 0.2)
+        move_speed = 0.2
+        if crazyMode is True:
+            move_speed = 1.0
+        Gp.move(limb, pre_grasp_pos, move_speed)
         rospy.sleep(2)
         square_list = None
 
@@ -160,102 +173,109 @@ if debugMode == 5:
         # number_of_blocks_left -= 1
 
 else:
-    while square_list is not None and number_of_blocks_left != 0 and debugMode != 4:
-        # Pre-grasping joint angles
-        Gp.move(limb, pre_grasp_pos, 0.3)
-        rospy.sleep(1)
-        square_list = None
-
-        while square_list is None:
-            img = Gp.take_picture(0, 30)
-            if debugMode == 2 or debugMode == -1:
-                cv2.imshow("Only the dots", img)
-                cv2.waitKey()
-                # objLoc, new_frame = Gp.detect_block(frame)
-                # cv2.imshow("Image Captured", new_frame)
-            square_list = iH.square_img_to_centers_list(img)
-            number_of_blocks_left = len(square_list)
-
-        if debugMode == 1 or debugMode == -1:
-            worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(200, 200)
-            print "w ", worldVec
-            print "r ", rot
-            print "d ", dQ
-            drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                                  p_x=worldVec[0], p_y=worldVec[1], p_z=0.3,
-                                                  q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-            Gp.move(limb, positions=drop_block_pos, speed_ratio=0.2)
-            sys.exit()
-            break
-        else:
-            worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_list[0].getCenterX(), square_list[0].getCenterY())
-
-        # Move above the desired block to generate better grasp model
-        moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                         p_x=worldVec[0], p_y=worldVec[1], p_z=0.443,
-                                         # q_x=0, q_y=0, q_z=0, q_w=0)
-                                         q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-
-        Gp.move(limb, positions=moveJoint, speed_ratio=0.2)
-
-        # Retake image about the block for recognition
-
-        img = Gp.take_picture(0, 30)
-        square_list = iH.square_img_to_centers_list(img)
-
-        square_to_find = iH.find_square_closest_to_center(img, square_list)
-
-        print("found square position: ", square_to_find.getCenterX(), square_to_find.getCenterY(), "\n")
-        H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
-        print("found the best H and W: ", H, W)
-
-        if debugMode == 3:
-            print("grasp master predict", Ang)
-        worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
-        print("Matrix" + str(hom_Mtrx_c_b[0]) + " " + str(hom_Mtrx_c_b[1]))
-        Ang = square_to_find.getAngle(square_list)
-        if debugMode == 3:
-            print("my predict", Ang)
-        Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
-        rospy.sleep(1)
-
-        if debugMode == 3:
-            gripper.close()
+    try:
+        while square_list is not None and number_of_blocks_left != 0 and debugMode != 4:
+            # Pre-grasping joint angles
+            move_speed = 0.2
+            if crazyMode is True:
+                move_speed = 1.0
+            Gp.move(limb, pre_grasp_pos, move_speed)
             rospy.sleep(1)
+            square_list = None
+
+            while square_list is None:
+                img = Gp.take_picture(0, 30)
+                if debugMode == 2 or debugMode == -1:
+                    cv2.imshow("Only the dots", img)
+                    cv2.waitKey()
+                    # objLoc, new_frame = Gp.detect_block(frame)
+                    # cv2.imshow("Image Captured", new_frame)
+                square_list = iH.square_img_to_centers_list(img)
+                number_of_blocks_left = len(square_list)
+
+            if debugMode == 1 or debugMode == -1:
+                worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(200, 200)
+                print "w ", worldVec
+                print "r ", rot
+                print "d ", dQ
+                drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                                      p_x=worldVec[0], p_y=worldVec[1], p_z=0.3,
+                                                      q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+                Gp.move(limb, positions=drop_block_pos, speed_ratio=0.2)
+                sys.exit()
+                break
+            else:
+                worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_list[0].getCenterX(), square_list[0].getCenterY())
+
+            # Move above the desired block to generate better grasp model
+            moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                             p_x=worldVec[0], p_y=worldVec[1], p_z=0.443,
+                                             # q_x=0, q_y=0, q_z=0, q_w=0)
+                                             q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+
+            Gp.move(limb, positions=moveJoint, speed_ratio=0.2)
+
+            # Retake image about the block for recognition
+
+            img = Gp.take_picture(0, 30)
+            square_list = iH.square_img_to_centers_list(img)
+
+            square_to_find = iH.find_square_closest_to_center(img, square_list)
+
+            print("found square position: ", square_to_find.getCenterX(), square_to_find.getCenterY(), "\n")
+            H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
+            print("found the best H and W: ", H, W)
+
+            if debugMode == 3:
+                print("grasp master predict", Ang)
+            worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
+            print("Matrix" + str(hom_Mtrx_c_b[0]) + " " + str(hom_Mtrx_c_b[1]))
+            Ang = square_to_find.getAngle(square_list)
+            if debugMode == 3:
+                print("my predict", Ang)
+            Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
+            rospy.sleep(1)
+
+            if debugMode == 3:
+                gripper.close()
+                rospy.sleep(1)
+                gripper.open()
+                Gp.move(limb, pre_grasp_pos, 0.3)
+                break
+
+            # TODO: This allows the robot to vertically stack up the blocks
+            movingLoc = [0.72, 0 + 0.045, 0.005 + 0.045 * moved_times]
+            drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                                  p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
+                                                  q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+
+            Gp.move(limb, drop_block_pos, 0.2)
+
+            block = square_list[0]
+            block.setIndex(block_index)
+            block.setLocation(movingLoc, dQ)
+            # result_block_list.append(block)
+
+            rospy.sleep(1.5)
             gripper.open()
-            Gp.move(limb, pre_grasp_pos, 0.3)
-            break
+            rospy.sleep(1)
 
-        # TODO: This allows the robot to vertically stack up the blocks
-        movingLoc = [0.72, 0 + 0.045, 0.005 + 0.045 * moved_times]
-        drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                              p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
-                                              q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-
-        Gp.move(limb, drop_block_pos, 0.2)
-
-        block = square_list[0]
-        block.setIndex(block_index)
-        block.setLocation(movingLoc, dQ)
-        # result_block_list.append(block)
-
-        rospy.sleep(1.5)
-        gripper.open()
-        rospy.sleep(1)
-
-        movingLoc = [0.72, -0.8, 0.25 + 0.2 + 0.045 * moved_times]
-        drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                              p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
-                                              q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-        Gp.move(limb, drop_block_pos, 0.3)
-        # While loop stuff
-        moved_times += 1
-        block_index += 1
+            movingLoc = [0.72, -0.8, 0.25 + 0.2 + 0.045 * moved_times]
+            drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                                  p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
+                                                  q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+            Gp.move(limb, drop_block_pos, 0.3)
+            # While loop stuff
+            moved_times += 1
+            block_index += 1
     # number_of_blocks_left -= 1
-
-if debugMode != 3 and debugMode != 6:
-    Gp.move(limb, safe_move_r2l, 0.3)
-    rospy.sleep(1)
+    finally:
+        if debugMode != 3 and debugMode != 6:
+            move_speed = 0.2
+            if crazyMode is True:
+                move_speed = 1.0
+            Gp.move(limb, safe_move_r2l, move_speed)
+            rospy.sleep(1)
 
 if debugMode == 4:
     still_safe_move = Gp.ik_service_client(limb='right', use_advanced_options=True,

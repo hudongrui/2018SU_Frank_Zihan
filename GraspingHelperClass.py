@@ -29,10 +29,13 @@ from intera_motion_interface import (
     MotionWaypoint,
     MotionWaypointOptions
 )
-# from intera_motion_msgs.msg import TrajectoryOptions
-# from geometry_msgs.msg import PoseStamped
-# import PyKDL
-# from tf_conversions import posemath
+
+import moveit_commander
+import moveit_msgs.msg
+from math import pi
+from moveit_commander.conversions import pose_to_list
+from moveit_commander.conversions import pose_to_list
+
 ###########################################################
 
 ##################################################################################
