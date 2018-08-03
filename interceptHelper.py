@@ -23,11 +23,12 @@ debugMode = 0
 ##################################################################################
 
 #########################################################
+# This file contains all methods related to block recognition
 #########################################################
+
+
 # Check intersection of two points, if there is return the
 # point, angle, and True; if not, return none and False
-
-
 def check_intersect(line_1, line_2):
     # Endpoints of the first line
     pt1 = (line_1[0], line_1[1])
@@ -87,6 +88,7 @@ def check_intersect(line_1, line_2):
         return None, None, None, False
 
 
+# Remove similar lines in vacinity to each other that are being detected by Hough Transform
 def rm_line_duplicates(lines):
     for line_1 in lines:
         pt1 = (line_1[0], line_1[1])
@@ -108,6 +110,7 @@ def rm_line_duplicates(lines):
     return lines
 
 
+# Extends the edges to construct intersections, which might be a block's corners
 def extend_line(line):
     x1, y1, x2, y2 = line[0]
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
@@ -116,23 +119,21 @@ def extend_line(line):
     delta_x = 0
     delta_y = 0
     ratio = float(abs(1.8 * (one_block_len - length) / length))
+    # TODO: The non-zero constant appeared below are arbitrary defined ratio
     if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
         ratio = float(abs(0.8 * (one_block_len - length) / length))
-        # return line
     elif 0.95 * one_block_len < length < 1.05 * one_block_len:
         delta_x = int(abs(x2 - x1) * 0.5)
         delta_y = int(abs(y2 - y1) * 0.5)
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
         # print("One Block")
-        # 5
+
         ratio = float(abs(10 * (one_block_len - length) / length))
     elif length < 0.8 * one_block_len:
-        # 1.6
+
         ratio = float(abs((1.3 * one_block_len - length) / length))
 
-        # TODO: Extends lines based on its length, might need change ratio
-        # ratio = 0.6
     if delta_x == 0 and delta_y == 0:
         delta_x = int(abs(x2 - x1) * ratio)
         delta_y = int(abs(y2 - y1) * ratio)
@@ -147,12 +148,11 @@ def extend_line(line):
     extended = [x1_p, y1_p, x2_p, y2_p]
     # print("Original Length is " + str(length))
     # Extended_Length = int(math.sqrt((x2_p - x1_p) ** 2 + (y2_p - y1_p) ** 2))
-    # # print("Ratio is: " + str(ratio))
     # print("Extended Length is: " + str(Extended_Length))
     return [extended]
-    # return line
 
 
+# It's all in the name
 def increase_contrast(img):
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     # cv2.imshow("lab", lab)
@@ -177,7 +177,7 @@ def increase_contrast(img):
 
     return final
 
-
+# Remove intersections that are too close to each other
 def rm_nearby_intersect(intersections):
     if len(intersections) != 0:
         i = 0
@@ -192,28 +192,18 @@ def rm_nearby_intersect(intersections):
     return intersections
 
 
-# def adjust_gamma(image, gamma=1.0):
-#     # build a lookup table mapping the pixel values [0, 255] to
-#     # their adjusted gamma values
-#     invGamma = 1.0 / gamma
-#     table = np.array([((i / 255.0) ** invGamma) * 255
-#                       for i in np.arange(0, 256)]).astype("uint8")
-#
-#     # apply gamma correction using the lookup table
-#     return cv2.LUT(image, table)
-
-# DONE: you can use is_in_range_of_a_circle() method instead
-def is_near(ctr, intersects):
-    bol = False
-    for index in intersects:
-        # print(str(abs(ctr.x - index.y)) + " and " + str)
-        if is_in_range_of_a_circle(ctr, index.center, radius_threshold=15):
-            bol = True
-            break
-    return bol
+# This method is replaced by is_in_range_of_a_circle() method instead
+# def is_near(ctr, intersects):
+#     bol = False
+#     for index in intersects:
+#         # print(str(abs(ctr.x - index.y)) + " and " + str)
+#         if is_in_range_of_a_circle(ctr, index.center, radius_threshold=15):
+#             bol = True
+#             break
+#     return bol
 
 
-# DONE: Input List of rectangle, Output is list of rectangle with duplicate removed
+# Input List of rectangle, Output is list of rectangle with duplicate removed
 def rm_duplicates(rects):
     boo = False
     copy_of_list = copy.deepcopy(rects)
@@ -243,6 +233,7 @@ def rm_close_to_intersects(rects, intersections):
     return list
 
 
+# Remove the shadow projected by the blocks by thresholding
 def rm_shadow(image):
     image = image.copy()
     h, w = image.shape[0], image.shape[1]
@@ -265,21 +256,21 @@ def rm_shadow(image):
 
 
 # This method is currently unused, substituted by cv2.subtract
-def rm_background(img, mask):
-    h, w, _ = img.shape
-    # print(str(img[h//2, w//2]))
-    for y in range(h):
-        for x in range(w):
-            p_img = img[y, x]
-            p_mask = mask[y, x]
-            r, g, b = [abs(i - j) for i, j in zip(p_img, p_mask)]
-            t = 40
-            if r < t and g < t and b < t:
-                img[y, x] = [0, 0, 0]
+# def rm_background(img, mask):
+#     h, w, _ = img.shape
+#     # print(str(img[h//2, w//2]))
+#     for y in range(h):
+#         for x in range(w):
+#             p_img = img[y, x]
+#             p_mask = mask[y, x]
+#             r, g, b = [abs(i - j) for i, j in zip(p_img, p_mask)]
+#             t = 40
+#             if r < t and g < t and b < t:
+#                 img[y, x] = [0, 0, 0]
+#
+#     return img
 
-    return img
-
-
+# Check the color of the predicted rectangle center, if it's too similar to background color, remove it
 def rm_false_positive(rect_centers, img):
     img_gray = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2GRAY)
     centers = []
@@ -292,6 +283,8 @@ def rm_false_positive(rect_centers, img):
     return centers
 
 
+# All the possible corners are constructed as an Intersect object
+# theta is the angle between the two intersecting lines
 class Intersect:
     def __init__(self, x_intersect, y_intersect, theta=None, category=None):
         self.x = x_intersect
@@ -431,6 +424,7 @@ def refine_range(angle, lowerLimit=None, upperLimit=None, modifier=None):
     return angle
 
 
+# Based on the intersection found, a rectangle object is constructed recording its location and pivot points
 class Rectangle:
     def __init__(self, point1, point2, point3, point4=None, index=None, location=None):
         # location should be a 3-dimensional matrix that includes x, y, z coordinates of the block
@@ -537,6 +531,7 @@ class Rectangle:
         cv2.line(image, (self.point2.x, self.point2.y), (self.point3.x, self.point3.y), color, 1)
 
 
+# All in the name. Find this block helps to avoid picking up blocks under the influence of camera angle distortion
 def find_square_closest_to_center(img, square_list):
     h, w, _ = img.shape
     ctr_x, ctr_y = int(w / 2), int(h / 2)
@@ -547,19 +542,21 @@ def find_square_closest_to_center(img, square_list):
         dists.append(manhattan_dist)
 
     toReturn = square_list[dists.index(min(dists))]
-    copy = img.copy()
-
-    # cv2.circle(copy, (int(toReturn.getCenterX()), int(toReturn.getCenterY())),7, (100, 150, 200), -1)
-    # cv2.imshow("Block to Grasp", copy)
-
-    # print("Grabbing Block as Labeled. Confirm?")
-    # cv2.waitKey()
-    # rospy.sleep(2)
-    cv2.destroyAllWindows()
 
     return toReturn
 
 
+#########################################################################################
+# TODO: This is the main code to perform block recognition
+#
+# This algorithm uses Canny Edge Detection and Hough Line transform to identify possible sides
+# of the blocks. Then, extend the sides to form intersections. We assume all intersections are
+# possible corners of the block and reconstruct rectangle-shaped blocks based on them. Finally,
+# Check and remove rectangles that are falsely identified as blocks.
+#
+# NOTE: All the commented code blocks appeared in the method below are for debugging purpose
+# Uncomment them to display intermediate outputs
+#########################################################################################
 def square_img_to_centers_list(img, square=None):
     mask = io.imread("Background.jpg")
 
@@ -623,7 +620,7 @@ def square_img_to_centers_list(img, square=None):
 
         # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
         line_cnt = line_cnt + 1
-    # TODO: Remove Duplicate Lines for Robustness
+    # Optional: Remove Duplicate Lines for Robustness
     # ext_lines = iH.rm_line_duplicates(ext_lines)
     # cv2.imshow("Extend the lines", ext_img)
 
@@ -690,9 +687,8 @@ def square_img_to_centers_list(img, square=None):
     return found_rect
 
 
-# TODO
-def get_joint_angles(x, y, z, theta, dQ):
-    return None
+# def get_joint_angles(x, y, z, theta, dQ):
+#     return None
 
 
 # Calculate actual location in the base-centered coordinate
@@ -709,13 +705,13 @@ def get_location(list_of_coordinate):
     return locations
 
 
+# Program a series of location here for the robot to drop of the block
+# We construct a new coordinate system where the center drop-off location is origin,
+# with each unit length of one block length, which is 0.0045m
 def drop_destinations():
-    # Program a series of location here for the robot to drop of the block
-    # We construct a new coordinate system where the center drop-off location is origin,
-    # with each unit length of one block length, which is 0.0045m
-
     # Pyramid
     preset_1 = [[0, -1, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], [0, -0.5, 1, 0], [0, 0.5, 1, 0], [0, 0, 2, 0]]
+
     # 45 degrees rotation clockwise
     preset_2 = [[0, 0, 0, 45]]
 

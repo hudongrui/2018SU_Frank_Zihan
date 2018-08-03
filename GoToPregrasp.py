@@ -5,6 +5,12 @@ import intera_interface.head_display as head
 import cv2
 import GraspingHelperClass as Gp
 
+############################################################
+# This script takes the robot to pre-grasp position,
+# takes a picture right on top of the workspace, and save it.
+# This script is primarily used for debugging.
+############################################################
+
 rospy.init_node("GraspingDemo")
 global limb
 limb = intera_interface.Limb('right')
