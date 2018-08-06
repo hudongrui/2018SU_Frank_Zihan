@@ -31,12 +31,12 @@ headDisplay = head.HeadDisplay()
 # 5     -- Demo Mode
 # 6     -- angle for placing robot
 # 7     -- trajectory planning
-debugMode = 7
+debugMode = 8
 ##################################################################################
 
 ##################################################################################
 # ~~~~~~~~~~~~~~~~~~ girigiri ai~~~~~~~~~~~~~~~
-crazyMode = True
+crazyMode = False
 ##################################################################################
 
 # this is the our desired Quaternion matrix
@@ -81,8 +81,11 @@ eef_link = group.get_end_effector_link()
 # print "============ End effector: %s" % eef_link
 
 # We can get a list of all the groups in the robot:
-group_names = robot.get_group_names()
+# group_names = robot.get_group_names()
 # print "============ Robot Groups:", robot.get_group_names()
+
+link_names = robot.get_link_names()
+print "============ Robot Links:", robot.get_link_names()
 # TODO: figure out why i can get current joint values
 # joint_goal = group.get_current_joint_values()
 
@@ -92,8 +95,9 @@ group_names = robot.get_group_names()
 # print robot.get_current_state()
 # print ""
 
-Gp.load_objects(scene, planning_frame)
+Gp.load_objects(scene, planning_frame, robot, eef_link)
 rospy.sleep(1)
+Gp.remove_objects(scene, robot)
 ###############################################################
 
 moved_times = 0
@@ -109,7 +113,7 @@ task = iH.drop_destinations()
 # enableExecutionDurationMonitoring(false)
 if debugMode == 7:
     Gp.move_improved(group, pre_grasp_pos)
-    Gp.remove_objects(scene)
+    Gp.remove_objects(scene, robot)
 elif debugMode == 5:
     for drop_off_location in task:
         # Pre-grasping joint angles
@@ -324,3 +328,4 @@ if debugMode == 4:
                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
     Gp.move(limb, not_safe_move, 0.01)
 
+moveComm.roscpp_shutdown()
