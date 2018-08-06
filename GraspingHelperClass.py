@@ -139,6 +139,55 @@ def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
 
     traj.send_trajectory(timeout=timeout)
 
+
+def move_improved(group, positions):
+    # print joint_goal
+    # try:
+    #     joint_goal = group.get_current_joint_values()
+    #     joint_goal[0] = positions[0]
+    #     joint_goal[1] = positions[1]
+    #     joint_goal[2] = positions[2]
+    #     joint_goal[3] = positions[3]
+    #     joint_goal[4] = positions[4]
+    #     joint_goal[5] = positions[5]
+    #     joint_goal[6] = positions[6]
+    # except IndexError:
+    #     joint_goal = positions
+
+    plan = group.go(positions, wait=True)
+    group.stop()
+    group.clear_pose_targets()
+    #
+    # group.execute(plan, wait=True)
+
+
+def load_objects(scene, planning_frame):
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    box_pose.header.frame_id = planning_frame  # must put it in the frame
+    box_pose.pose.position.x = 0.
+    box_pose.pose.position.y = -0.86
+    box_pose.pose.position.z = -0.51
+    box_name = "left table"
+    scene.add_box(box_name, box_pose, (2, 0.762, 0.86))
+
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    box_pose.header.frame_id = planning_frame  # must put it in the frame
+    box_pose.pose.position.x = -0.6
+    box_pose.pose.position.y = 0.
+    box_pose.pose.position.z = 0.
+    box_name = "wall"
+    scene.add_box(box_name, box_pose, (0.1, 10, 10))
+
+
+def remove_objects(scene):
+    rospy.sleep(1)
+    scene.remove_world_object("left table")
+    rospy.sleep(1)
+    scene.remove_world_object("wall")
+    rospy.sleep(1)
+
 # ======================================================================================
 
 

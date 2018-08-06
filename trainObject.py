@@ -3,7 +3,6 @@ from __future__ import division
 import copy
 import sys
 
-
 import cv2
 import intera_interface
 import intera_interface.head_display as head
@@ -13,15 +12,7 @@ import GraspingHelperClass as Gp
 import graspObjectImageFunc as gi
 import interceptHelper as iH
 
-###############################################################
-# added by Zihan 08/02/2018
-moveComm = Gp.moveit_commander
-moveComm.roscpp_initialize(sys.argv)
-rospy.init_node("FrankZihanSu")
-robot = moveComm.RobotCommander()
-scene = moveComm.PlanningSceneInterface()
-###############################################################
-
+rospy.init_node("FrankZihanSum")
 global limb
 limb = intera_interface.Limb('right')
 global gripper
@@ -39,8 +30,8 @@ headDisplay = head.HeadDisplay()
 # 4     -- collision test w/o breaking the robot
 # 5     -- Demo Mode
 # 6     -- angle for placing robot
-
-debugMode = 0
+# 7     -- trajectory planning
+debugMode = 7
 ##################################################################################
 
 ##################################################################################
@@ -63,6 +54,48 @@ safe_move_r2l = [-0.504587890625, -1.9217080078125, 0.319630859375, 0.9335566406
 pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109375, 0.4400439453125, 1.5005537109375,
                  1.35516796875]
 
+test_location = [-0.05053515625, 0.144181640625, -1.3031396484375, -0.9186611328125, -1.79606640625,
+                 -1.713986328125, -1.4706103515625]
+
+###############################################################
+# added by Zihan 08/02/2018
+
+moveComm = Gp.moveit_commander
+moveComm.roscpp_initialize(sys.argv)
+
+robot = moveComm.RobotCommander()
+scene = moveComm.PlanningSceneInterface()
+
+group_name = "right_arm"
+group = moveComm.MoveGroupCommander(group_name)
+display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
+                                               Gp.moveit_msgs.msg.DisplayTrajectory,
+                                               queue_size=20)
+
+# We can get the name of the reference frame for this robot:
+planning_frame = group.get_planning_frame()
+# print "============ Reference frame: %s" % planning_frame
+
+# We can also print the name of the end-effector link for this group:
+eef_link = group.get_end_effector_link()
+# print "============ End effector: %s" % eef_link
+
+# We can get a list of all the groups in the robot:
+group_names = robot.get_group_names()
+# print "============ Robot Groups:", robot.get_group_names()
+# TODO: figure out why i can get current joint values
+# joint_goal = group.get_current_joint_values()
+
+# Sometimes for debugging it is useful to print the entire state of the
+# robot:
+# print "============ Printing robot state"
+# print robot.get_current_state()
+# print ""
+
+Gp.load_objects(scene, planning_frame)
+rospy.sleep(1)
+###############################################################
+
 moved_times = 0
 square_list = 0
 
@@ -73,7 +106,11 @@ block_index = 0
 # TODO: below returns a set of coordinates where we want to drop the block.
 task = iH.drop_destinations()
 
-if debugMode == 5:
+# enableExecutionDurationMonitoring(false)
+if debugMode == 7:
+    Gp.move_improved(group, pre_grasp_pos)
+    Gp.remove_objects(scene)
+elif debugMode == 5:
     for drop_off_location in task:
         # Pre-grasping joint angles
         move_speed = 0.2
@@ -148,8 +185,8 @@ if debugMode == 5:
         pre_moving_loc[2] += 0.3
         dQ = Gp.euler_to_quaternion(pre_moving_loc[3])
         pre_drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                              p_x=pre_moving_loc[0], p_y=pre_moving_loc[1], p_z=pre_moving_loc[2],
-                                              q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+                                                  p_x=pre_moving_loc[0], p_y=pre_moving_loc[1], p_z=pre_moving_loc[2],
+                                                  q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
         drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                               p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                               q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
@@ -172,7 +209,7 @@ if debugMode == 5:
         block_index += 1
         # number_of_blocks_left -= 1
 
-else:
+elif debugMode != 7:
     try:
         while square_list is not None and number_of_blocks_left != 0 and debugMode != 4:
             # Pre-grasping joint angles

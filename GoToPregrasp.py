@@ -36,9 +36,9 @@ rospy.sleep(1)
 
 #####################################################################################################################
 # Here is to take a picture at pre-grasping postion
-frame = Gp.take_picture(0, 30)
-cv2.imshow("Displaying Image", frame)
-cv2.waitKey()
-cv2.destroyAllWindows()
-cv2.imwrite("/home/team18/Frank_Ray_Zihan/2018SU_Frank_Zihan/TestPictures/With_Flash.jpg", frame)
+# frame = Gp.take_picture(0, 30)
+# cv2.imshow("Displaying Image", frame)
+# cv2.waitKey()
+# cv2.destroyAllWindows()
+# cv2.imwrite("/home/team18/Frank_Ray_Zihan/2018SU_Frank_Zihan/TestPictures/With_Flash.jpg", frame)
 ######################################################################################################################
