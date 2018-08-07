@@ -15,8 +15,8 @@ import cv2
 # imgR = cv2.imread(args["image_right"])
 
 # Load the image
-imgL = cv2.imread('1_left.JPG',0)
-imgR = cv2.imread('1_right.JPG',0)
+imgL = cv2.imread('art_l.jpg', 0)
+imgR = cv2.imread('art_r.jpg', 0)
 
 
 stereo = cv2.StereoBM_create(numDisparities=16, blockSize=15)
