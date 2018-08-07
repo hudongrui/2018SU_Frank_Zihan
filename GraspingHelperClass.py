@@ -161,7 +161,7 @@ def move_improved(group, positions):
     # group.execute(plan, wait=True)
 
 
-def load_objects(scene, planning_frame, robot, eef_link):
+def load_objects(scene, planning_frame):
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
@@ -178,16 +178,21 @@ def load_objects(scene, planning_frame, robot, eef_link):
     box_pose.pose.position.y = 0.
     box_pose.pose.position.z = 0.
     box_name = "wall"
-    scene.add_box(box_name, box_pose, (0.1, 10, 10))
+    scene.add_box(box_name, box_pose, (0.3, 10, 10))
+    rospy.sleep(1)
 
+
+def load_camera_w_mount(scene, robot, planning_frame):
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_name = "camera_w_mount"
-    joint_name = 'right_j6'
     link_name = 'right_l6'
-    link = robot.get_link(link_name)
-    scene.attach_box(link, box_name, size=(1, 1, 1))
+    box_pose.header.frame_id = 'right_l6'  # must put it in the frame
+    # box_pose.pose.position.x = 0.
+    box_pose.pose.position.y = -0.09
+    # box_pose.pose.position.z = 0.
+    box_name = "camera_w_mount"
+    scene.attach_box(link_name, box_name, box_pose, size=(0.08, 0.08, 0.08))
+    rospy.sleep(1)
 
 
 def remove_objects(scene, robot):
@@ -197,10 +202,13 @@ def remove_objects(scene, robot):
     scene.remove_world_object("wall")
     rospy.sleep(1)
 
-    grasping_group = 'right_j6'
-    touch_links = robot.get_joint(grasping_group)
-    scene.remove_attached_object(grasping_group, name="camera_w_mount")
+
+def remove_camera_w_mount(scene, robot):
     rospy.sleep(1)
+    grasping_group = 'right_l6'
+    scene.remove_attached_object(grasping_group)
+    rospy.sleep(1)
+    scene.remove_world_object("camera_w_mount")
 
 
 def check_if_attached(scene, box_name, box_is_attached, box_is_known):

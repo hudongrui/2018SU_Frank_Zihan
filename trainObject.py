@@ -31,7 +31,7 @@ headDisplay = head.HeadDisplay()
 # 5     -- Demo Mode
 # 6     -- angle for placing robot
 # 7     -- trajectory planning
-debugMode = 8
+debugMode = 7
 ##################################################################################
 
 ##################################################################################
@@ -84,9 +84,9 @@ eef_link = group.get_end_effector_link()
 # group_names = robot.get_group_names()
 # print "============ Robot Groups:", robot.get_group_names()
 
-link_names = robot.get_link_names()
-print "============ Robot Links:", robot.get_link_names()
-# TODO: figure out why i can get current joint values
+# link_names = robot.get_link_names()
+# print "============ Robot Links:", robot.get_link_names()
+# TODO: figure out why i cannot get current joint values
 # joint_goal = group.get_current_joint_values()
 
 # Sometimes for debugging it is useful to print the entire state of the
@@ -95,9 +95,8 @@ print "============ Robot Links:", robot.get_link_names()
 # print robot.get_current_state()
 # print ""
 
-Gp.load_objects(scene, planning_frame, robot, eef_link)
-rospy.sleep(1)
-Gp.remove_objects(scene, robot)
+Gp.load_objects(scene, planning_frame)
+Gp.load_camera_w_mount(scene, robot, planning_frame)
 ###############################################################
 
 moved_times = 0
@@ -114,6 +113,7 @@ task = iH.drop_destinations()
 if debugMode == 7:
     Gp.move_improved(group, pre_grasp_pos)
     Gp.remove_objects(scene, robot)
+    Gp.remove_camera_w_mount(scene, robot)
 elif debugMode == 5:
     for drop_off_location in task:
         # Pre-grasping joint angles
