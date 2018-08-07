@@ -111,9 +111,13 @@ task = iH.drop_destinations()
 
 # enableExecutionDurationMonitoring(false)
 if debugMode == 7:
-    Gp.move_improved(group, pre_grasp_pos)
-    Gp.remove_objects(scene, robot)
-    Gp.remove_camera_w_mount(scene, robot)
+
+    # Gp.move_move(limb, group, test_location)
+    rospy.sleep(1)
+    Gp.move(limb, pre_grasp_pos, 0.3)
+    rospy.sleep(1)
+    Gp.move_improved(limb, group, safe_move_r2l)
+
 elif debugMode == 5:
     for drop_off_location in task:
         # Pre-grasping joint angles
@@ -272,9 +276,9 @@ elif debugMode != 7:
 
             square_to_find = iH.find_square_closest_to_center(img, square_list)
 
-            print("found square position: ", square_to_find.getCenterX(), square_to_find.getCenterY(), "\n")
+            rospy.logdebug("found square position: ", square_to_find.getCenterX(), square_to_find.getCenterY(), "\n")
             H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
-            print("found the best H and W: ", H, W)
+            rospy.logdebug("found the best H and W: ", H, W)
 
             if debugMode == 3:
                 print("grasp master predict", Ang)

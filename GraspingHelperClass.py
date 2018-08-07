@@ -6,7 +6,6 @@ import numpy as np
 import camera_calib_BMW as camCalib
 import transformations
 import os
-
 from geometry_msgs.msg import (
     PoseStamped,
     Pose,
@@ -14,7 +13,10 @@ from geometry_msgs.msg import (
     Quaternion,
 )
 
-from std_msgs.msg import Header
+from std_msgs.msg import (
+    Header,
+    float64
+)
 
 from intera_core_msgs.srv import (
     SolvePositionIK,
@@ -140,27 +142,43 @@ def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
     traj.send_trajectory(timeout=timeout)
 
 
-def move_improved(group, positions, speed_ratio=None):
-    # print joint_goal
-    # try:
-    #     joint_goal = group.get_current_joint_values()
-    #     joint_goal[0] = positions[0]
-    #     joint_goal[1] = positions[1]
-    #     joint_goal[2] = positions[2]
-    #     joint_goal[3] = positions[3]
-    #     joint_goal[4] = positions[4]
-    #     joint_goal[5] = positions[5]
-    #     joint_goal[6] = positions[6]
-    # except IndexError:
-    #     joint_goal = positions
+def move_improved(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
     if speed_ratio is None:
         speed_ratio = 0.5
     group.set_max_velocity_scaling_factor(speed_ratio)
-    group.go(positions, wait=True)
+    plan = group.plan(positions)
+    group.execute(plan, wait=True)
+    rospy.loginfo("done moving")
+    rospy.sleep(10)
     group.stop()
     group.clear_pose_targets()
-    #
+
+
+def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    if speed_ratio is None:
+        speed_ratio = 0.3
+
+    if accel_ratio is None:
+        accel_ratio = 0.1
+    # group.set_max_velocity_scaling_factor(speed_ratio)
+    plan = group.plan(positions)
+    rospy.Subscriber('trajectory_msgs/JointTrajectory', float64, )
+    print plan.positions
+    # plan = msg_to_string(plan)
+    traj = MotionTrajectory(limb=limb)
+    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
+                                     max_joint_accel=accel_ratio)
+
+    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
+
+    waypoint.set_joint_angles(waypoints)
+    traj.append_waypoint(waypoint.to_msg())
+
+    traj.send_trajectory(timeout=timeout)
+    # group.go(positions, wait=True)
     # group.execute(plan, wait=True)
+    group.stop()
+    group.clear_pose_targets()
 
 
 def load_objects(scene, planning_frame):
@@ -198,20 +216,24 @@ def load_camera_w_mount(scene, robot, planning_frame):
 
 
 def remove_objects(scene):
+    rospy.loginfo("Removing obstacles")
     rospy.sleep(1)
     scene.remove_world_object("left table")
     rospy.sleep(1)
     scene.remove_world_object("wall")
     rospy.sleep(1)
+    rospy.loginfo("Success")
 
 
 def remove_camera_w_mount(scene):
+    rospy.loginfo("Removing camera mount")
     rospy.sleep(1)
     grasping_group = 'right_l6'
     scene.remove_attached_object(grasping_group)
     rospy.sleep(1)
     scene.remove_world_object("camera_w_mount")
     rospy.sleep(1)
+    rospy.loginfo("Success")
 
 
 def check_if_attached(scene, box_name, box_is_attached, box_is_known):
