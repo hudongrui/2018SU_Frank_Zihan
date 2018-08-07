@@ -140,7 +140,7 @@ def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
     traj.send_trajectory(timeout=timeout)
 
 
-def move_improved(group, positions):
+def move_improved(group, positions, speed_ratio=None):
     # print joint_goal
     # try:
     #     joint_goal = group.get_current_joint_values()
@@ -153,8 +153,10 @@ def move_improved(group, positions):
     #     joint_goal[6] = positions[6]
     # except IndexError:
     #     joint_goal = positions
-
-    plan = group.go(positions, wait=True)
+    if speed_ratio is None:
+        speed_ratio = 0.5
+    group.set_max_velocity_scaling_factor(speed_ratio)
+    group.go(positions, wait=True)
     group.stop()
     group.clear_pose_targets()
     #
@@ -195,7 +197,7 @@ def load_camera_w_mount(scene, robot, planning_frame):
     rospy.sleep(1)
 
 
-def remove_objects(scene, robot):
+def remove_objects(scene):
     rospy.sleep(1)
     scene.remove_world_object("left table")
     rospy.sleep(1)
@@ -203,12 +205,13 @@ def remove_objects(scene, robot):
     rospy.sleep(1)
 
 
-def remove_camera_w_mount(scene, robot):
+def remove_camera_w_mount(scene):
     rospy.sleep(1)
     grasping_group = 'right_l6'
     scene.remove_attached_object(grasping_group)
     rospy.sleep(1)
     scene.remove_world_object("camera_w_mount")
+    rospy.sleep(1)
 
 
 def check_if_attached(scene, box_name, box_is_attached, box_is_known):
@@ -471,10 +474,10 @@ def take_picture(camera_port, ramp_frames):
     # to adjust light levels, if necessary
     for i in xrange(ramp_frames):
         temp = get_image()
-    print("Taking image...")
+    # print("Taking image...")
     # Take the actual image we want to keep
     final_im = get_image()
-    print("Done")
+    # print("Done")
 
     camera.release()
     return final_im
