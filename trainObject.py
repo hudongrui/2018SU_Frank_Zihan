@@ -57,6 +57,9 @@ pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109
 test_location = [-0.05053515625, 0.144181640625, -1.3031396484375, -0.9186611328125, -1.79606640625,
                  -1.713986328125, -1.4706103515625]
 
+collision_move = [-0.48626953125, 0.2361240234375, 1.8887138671875, -1.71039453125, -1.2699970703125,
+                  1.2547158203125, -3.5353935546875]
+
 ###############################################################
 # added by Zihan 08/02/2018
 
@@ -111,12 +114,14 @@ task = iH.drop_destinations()
 
 # enableExecutionDurationMonitoring(false)
 if debugMode == 7:
-
-    # Gp.move_move(limb, group, test_location)
     rospy.sleep(1)
-    Gp.move(limb, pre_grasp_pos, 0.3)
+    Gp.move_improved(group, safe_move_r2l)
     rospy.sleep(1)
-    Gp.move_improved(limb, group, safe_move_r2l)
+    Gp.move_improved(group, collision_move)
+    rospy.sleep(1)
+    Gp.move_improved(group, safe_move_r2l)
+    # rospy.sleep(1)
+    # Gp.move_improved(limb, group, pre_grasp_pos)
 
 elif debugMode == 5:
     for drop_off_location in task:

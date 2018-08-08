@@ -105,6 +105,17 @@ for index in found_rect:
     rect_cnt = rect_cnt + 1
 
 
+height, width, _ = img.shape
+blank_image = np.zeros((height,width,3), np.uint8)
+for point in intersections:
+    cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
+
+
+# Draw the center of found rectangles
+for index in found_rect:
+    cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+
+
 print("Found " + str(len(found_rect)) + " blocks in the frame")
 if number_of_center == 0:
     print("Could not find any blocks.")
@@ -118,7 +129,7 @@ if debug_mode == 1:
     cv2.imshow("Canny Edges", edges)
     cv2.imshow("Originally detected lines", unext_img)
     cv2.imshow("Extend the lines", ext_img)
-
+    cv2.imshow("Only the dots", blank_image)
     cv2.imshow("Detection Result", unproc_image)
 
     # for rect in found_rect:

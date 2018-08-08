@@ -15,7 +15,8 @@ from geometry_msgs.msg import (
 
 from std_msgs.msg import (
     Header,
-    float64
+    Float64MultiArray,
+    Float64
 )
 
 from intera_core_msgs.srv import (
@@ -26,6 +27,7 @@ from intera_core_msgs.srv import (
 ##############################################
 # added by Zihan
 # import go_to_cartesian_pose as smomo
+from numpy import float64
 from intera_motion_interface import (
     MotionTrajectory,
     MotionWaypoint,
@@ -142,16 +144,21 @@ def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
     traj.send_trajectory(timeout=timeout)
 
 
-def move_improved(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+def move_improved(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    rospy.loginfo("Initializing Motion")
     if speed_ratio is None:
-        speed_ratio = 0.5
+        speed_ratio = 0.5  # this is recommended speed
     group.set_max_velocity_scaling_factor(speed_ratio)
     plan = group.plan(positions)
     group.execute(plan, wait=True)
-    rospy.loginfo("done moving")
-    rospy.sleep(10)
+    rospy.sleep(1)
     group.stop()
     group.clear_pose_targets()
+
+
+def record_them(data):
+    print data
+    print "got here-----------------------#####"
 
 
 def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
@@ -162,8 +169,8 @@ def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeou
         accel_ratio = 0.1
     # group.set_max_velocity_scaling_factor(speed_ratio)
     plan = group.plan(positions)
-    rospy.Subscriber('trajectory_msgs/JointTrajectory', float64, )
-    print plan.positions
+    rospy.Subscriber('moveit_msgs/RobotTrajectory', Float64MultiArray, record_them)
+    # print plan.positions
     # plan = msg_to_string(plan)
     traj = MotionTrajectory(limb=limb)
     wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
@@ -171,7 +178,7 @@ def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeou
 
     waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
 
-    waypoint.set_joint_angles(waypoints)
+    waypoint.set_joint_angles(joint_angles=positions)
     traj.append_waypoint(waypoint.to_msg())
 
     traj.send_trajectory(timeout=timeout)
@@ -182,6 +189,7 @@ def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeou
 
 
 def load_objects(scene, planning_frame):
+    rospy.loginfo("Loading environment objects ...")
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
@@ -222,7 +230,6 @@ def remove_objects(scene):
     rospy.sleep(1)
     scene.remove_world_object("wall")
     rospy.sleep(1)
-    rospy.loginfo("Success")
 
 
 def remove_camera_w_mount(scene):
@@ -233,7 +240,6 @@ def remove_camera_w_mount(scene):
     rospy.sleep(1)
     scene.remove_world_object("camera_w_mount")
     rospy.sleep(1)
-    rospy.loginfo("Success")
 
 
 def check_if_attached(scene, box_name, box_is_attached, box_is_known):
