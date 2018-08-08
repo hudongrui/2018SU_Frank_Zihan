@@ -207,30 +207,36 @@ def rm_nearby_intersect(intersections):
 def rm_duplicates(rects):
     boo = False
     copy_of_list = copy.deepcopy(rects)
-    output = [copy_of_list[0]]
-    for rect in copy_of_list:
-        for compare_item in output:
-            if is_in_range_of_a_circle(rect.center, compare_item.center, radius_threshold=25):
-                boo = True
-        if boo is False:
-            output.append(rect)
-        boo = False
-    return output
+    try:
+        output = [copy_of_list[0]]
+        for rect in copy_of_list:
+            for compare_item in output:
+                if is_in_range_of_a_circle(rect.center, compare_item.center, radius_threshold=25):
+                    boo = True
+            if boo is False:
+                output.append(rect)
+            boo = False
+        return output
+    except (IndexError, TypeError):
+        return None
 
 
 def rm_close_to_intersects(rects, intersections):
     list = []
     boo = False
-    for rect in rects:
-        point_1 = rect.center
-        for intersect in intersections:
-            point_2 = intersect
-            if is_in_range_of_a_circle(point_1, point_2, radius_threshold=27):
-                boo = True
-        if boo is False:
-            list.append(rect)
-        boo = False
-    return list
+    try:
+        for rect in rects:
+            point_1 = rect.center
+            for intersect in intersections:
+                point_2 = intersect
+                if is_in_range_of_a_circle(point_1, point_2, radius_threshold=27):
+                    boo = True
+            if boo is False:
+                list.append(rect)
+            boo = False
+        return list
+    except TypeError:
+        return None
 
 
 # Remove the shadow projected by the blocks by thresholding
@@ -274,13 +280,15 @@ def rm_shadow(image):
 def rm_false_positive(rect_centers, img):
     img_gray = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2GRAY)
     centers = []
-    for rect in rect_centers:
-        # print(img_gray[int(rect.y), int(rect.x)])
-        # print("at (" + str(int(rect.center.y)) + ", " + str(int(rect.center.x)) + ")")
-        if np.any(img_gray[int(rect.center.y), int(rect.center.x)] > 10):
-            centers.append(rect)
-
-    return centers
+    try:
+        for rect in rect_centers:
+            # print(img_gray[int(rect.y), int(rect.x)])
+            # print("at (" + str(int(rect.center.y)) + ", " + str(int(rect.center.x)) + ")")
+            if np.any(img_gray[int(rect.center.y), int(rect.center.x)] > 10):
+                centers.append(rect)
+        return centers
+    except TypeError:
+        return None
 
 
 # All the possible corners are constructed as an Intersect object
@@ -366,18 +374,21 @@ def categorize_rect(intersections):
                                                 tmp_center_list)
     list_of_squares = sorted(list_of_squares, key=lambda rect: rect.side_length)
     temp_list = copy.deepcopy(list_of_squares)
-    standard_length = temp_list[0].side_length
-    for rect in temp_list:
-        if rect.side_length > standard_length * 1.8:
-            temp_list.remove(rect)
-    temp_list = rm_duplicates(temp_list)
-    index = 0
-    for rect in temp_list:
-        rect.setIndex(index)
-        index += 1
-    elapsed_time = time.time() - start_time
-    print("the time elapsed for categorizing square is " + str(elapsed_time))
-    return temp_list
+    try:
+        standard_length = temp_list[0].side_length
+        for rect in temp_list:
+            if rect.side_length > standard_length * 1.8:
+                temp_list.remove(rect)
+        temp_list = rm_duplicates(temp_list)
+        index = 0
+        for rect in temp_list:
+            rect.setIndex(index)
+            index += 1
+        elapsed_time = time.time() - start_time
+        print("the time elapsed for categorizing square is " + str(elapsed_time))
+        return temp_list
+    except IndexError:
+        return None
 
     # list_of_squares = sorted(list_of_squares, key=lambda rect: rect.getDistance())
     # temp_list = copy.deepcopy(list_of_squares)
@@ -619,7 +630,7 @@ def square_img_to_centers_list(img, square=None):
         c_y = int((new_line[0][1] + new_line[0][3]) / 2)
 
         # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
-        line_cnt = line_cnt + 1
+        line_cnt += 1
     # Optional: Remove Duplicate Lines for Robustness
     # ext_lines = iH.rm_line_duplicates(ext_lines)
     # cv2.imshow("Extend the lines", ext_img)
@@ -660,31 +671,34 @@ def square_img_to_centers_list(img, square=None):
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
 
-    rect_cnt = 0
-    for index in found_rect:
-        number_of_center += 1
-        cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
-        cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
-        rect_cnt = rect_cnt + 1
-    print("Found " + str(len(found_rect)) + " blocks in the frame")
-    if number_of_center == 0:
-        print("Could not find any blocks.")
+    try:
+        rect_cnt = 0
+        for index in found_rect:
+            number_of_center += 1
+            cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+            cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
+                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+            rect_cnt = rect_cnt + 1
+        print("Found " + str(len(found_rect)) + " blocks in the frame")
+        if number_of_center == 0:
+            print("Could not find any blocks.")
 
-    # for rect in found_rect:
-    #     rect.drawDiagonal1(blank_image)
-    #     rect.drawDiagonal2(blank_image)
-    #
-    # cv2.imshow("Removed Background", img_filtered)
-    # cv2.imshow("Closing", closing)
-    # cv2.imshow("Increast Contrast", contrast)
-    # cv2.imshow("Canny Edges", edges)
-    # cv2.imshow("Originally detected lines", unext_img)
-    # cv2.imshow("Extend the lines", ext_img)
-    # cv2.imshow("Displaying Result", blank_image)
-    # cv2.waitKey()
-    # cv2.destroyAllWindows()
-    return found_rect
+        # for rect in found_rect:
+        #     rect.drawDiagonal1(blank_image)
+        #     rect.drawDiagonal2(blank_image)
+        #
+        # cv2.imshow("Removed Background", img_filtered)
+        # cv2.imshow("Closing", closing)
+        # cv2.imshow("Increast Contrast", contrast)
+        # cv2.imshow("Canny Edges", edges)
+        # cv2.imshow("Originally detected lines", unext_img)
+        # cv2.imshow("Extend the lines", ext_img)
+        # cv2.imshow("Displaying Result", blank_image)
+        # cv2.waitKey()
+        # cv2.destroyAllWindows()
+        return found_rect
+    except TypeError:
+        return None
 
 
 # def get_joint_angles(x, y, z, theta, dQ):

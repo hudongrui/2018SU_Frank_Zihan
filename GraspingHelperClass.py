@@ -6,7 +6,6 @@ import numpy as np
 import camera_calib_BMW as camCalib
 import transformations
 import os
-
 from geometry_msgs.msg import (
     PoseStamped,
     Pose,
@@ -14,7 +13,11 @@ from geometry_msgs.msg import (
     Quaternion,
 )
 
-from std_msgs.msg import Header
+from std_msgs.msg import (
+    Header,
+    Float64MultiArray,
+    Float64
+)
 
 from intera_core_msgs.srv import (
     SolvePositionIK,
@@ -24,6 +27,7 @@ from intera_core_msgs.srv import (
 ##############################################
 # added by Zihan
 # import go_to_cartesian_pose as smomo
+from numpy import float64
 from intera_motion_interface import (
     MotionTrajectory,
     MotionWaypoint,
@@ -140,28 +144,52 @@ def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
     traj.send_trajectory(timeout=timeout)
 
 
-def move_improved(group, positions):
-    # print joint_goal
-    # try:
-    #     joint_goal = group.get_current_joint_values()
-    #     joint_goal[0] = positions[0]
-    #     joint_goal[1] = positions[1]
-    #     joint_goal[2] = positions[2]
-    #     joint_goal[3] = positions[3]
-    #     joint_goal[4] = positions[4]
-    #     joint_goal[5] = positions[5]
-    #     joint_goal[6] = positions[6]
-    # except IndexError:
-    #     joint_goal = positions
-
-    plan = group.go(positions, wait=True)
+def move_improved(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    rospy.loginfo("Initializing Motion")
+    if speed_ratio is None:
+        speed_ratio = 0.5  # this is recommended speed
+    group.set_max_velocity_scaling_factor(speed_ratio)
+    plan = group.plan(positions)
+    group.execute(plan, wait=True)
+    rospy.sleep(1)
     group.stop()
     group.clear_pose_targets()
-    #
+
+
+def record_them(data):
+    print data
+    print "got here-----------------------#####"
+
+
+def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    if speed_ratio is None:
+        speed_ratio = 0.3
+
+    if accel_ratio is None:
+        accel_ratio = 0.1
+    # group.set_max_velocity_scaling_factor(speed_ratio)
+    plan = group.plan(positions)
+    rospy.Subscriber('moveit_msgs/RobotTrajectory', Float64MultiArray, record_them)
+    # print plan.positions
+    # plan = msg_to_string(plan)
+    traj = MotionTrajectory(limb=limb)
+    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
+                                     max_joint_accel=accel_ratio)
+
+    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
+
+    waypoint.set_joint_angles(joint_angles=positions)
+    traj.append_waypoint(waypoint.to_msg())
+
+    traj.send_trajectory(timeout=timeout)
+    # group.go(positions, wait=True)
     # group.execute(plan, wait=True)
+    group.stop()
+    group.clear_pose_targets()
 
 
 def load_objects(scene, planning_frame):
+    rospy.loginfo("Loading environment objects ...")
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
@@ -178,16 +206,65 @@ def load_objects(scene, planning_frame):
     box_pose.pose.position.y = 0.
     box_pose.pose.position.z = 0.
     box_name = "wall"
-    scene.add_box(box_name, box_pose, (0.1, 10, 10))
+    scene.add_box(box_name, box_pose, (0.3, 10, 10))
+    rospy.sleep(1)
+
+
+def load_camera_w_mount(scene, robot, planning_frame):
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    link_name = 'right_l6'
+    box_pose.header.frame_id = 'right_l6'  # must put it in the frame
+    # box_pose.pose.position.x = 0.
+    box_pose.pose.position.y = -0.09
+    # box_pose.pose.position.z = 0.
+    box_name = "camera_w_mount"
+    scene.attach_box(link_name, box_name, box_pose, size=(0.08, 0.08, 0.08))
+    rospy.sleep(1)
 
 
 def remove_objects(scene):
+    rospy.loginfo("Removing obstacles")
     rospy.sleep(1)
     scene.remove_world_object("left table")
     rospy.sleep(1)
     scene.remove_world_object("wall")
     rospy.sleep(1)
 
+
+def remove_camera_w_mount(scene):
+    rospy.loginfo("Removing camera mount")
+    rospy.sleep(1)
+    grasping_group = 'right_l6'
+    scene.remove_attached_object(grasping_group)
+    rospy.sleep(1)
+    scene.remove_world_object("camera_w_mount")
+    rospy.sleep(1)
+
+
+def check_if_attached(scene, box_name, box_is_attached, box_is_known):
+    timeout = 5
+    start = rospy.get_time()
+    seconds = rospy.get_time()
+    while (seconds - start < timeout) and not rospy.is_shutdown():
+        # Test if the box is in attached objects
+        attached_objects = scene.get_attached_objects([box_name])
+        is_attached = len(attached_objects.keys()) > 0
+
+        # Test if the box is in the scene.
+        # Note that attaching the box will remove it from known_objects
+        is_known = box_name in scene.get_known_object_names()
+
+        # Test if we are in the expected state
+        if (box_is_attached == is_attached) and (box_is_known == is_known):
+            return True
+
+        # Sleep so that we give other threads time on the processor
+        rospy.sleep(0.1)
+        seconds = rospy.get_time()
+
+    # If we exited the while loop without returning then we timed out
+    return False
 # ======================================================================================
 
 
@@ -425,10 +502,10 @@ def take_picture(camera_port, ramp_frames):
     # to adjust light levels, if necessary
     for i in xrange(ramp_frames):
         temp = get_image()
-    print("Taking image...")
+    # print("Taking image...")
     # Take the actual image we want to keep
     final_im = get_image()
-    print("Done")
+    # print("Done")
 
     camera.release()
     return final_im
