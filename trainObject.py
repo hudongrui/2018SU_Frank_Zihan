@@ -115,25 +115,29 @@ task = iH.drop_destinations()
 # enableExecutionDurationMonitoring(false)
 if debugMode == 7:
     rospy.sleep(1)
-    Gp.move_improved(group, safe_move_r2l)
+    Gp.avoid_move(group, safe_move_r2l)
     rospy.sleep(1)
-    Gp.move_improved(group, collision_move)
+    Gp.avoid_move(group, collision_move)
     rospy.sleep(1)
-    Gp.move_improved(group, safe_move_r2l)
+    Gp.avoid_move(group, safe_move_r2l)
     # rospy.sleep(1)
     # Gp.move_improved(limb, group, pre_grasp_pos)
-
 elif debugMode == 5:
     for drop_off_location in task:
+        Gp.smooth_move(limb, pre_grasp_pos)
         # Pre-grasping joint angles
         move_speed = 0.5
         if crazyMode is True:
             move_speed = 1.0
-        Gp.move_improved(group, pre_grasp_pos)
-        rospy.sleep(2)
+        Gp.avoid_move(group, pre_grasp_pos)
+        rospy.sleep(1)
         square_list = None
 
+        timeout = 0
         while square_list is None:
+            if timeout > 5:
+                rospy.logerr("No block exists in the frame. Returning to initial position")
+                break
             img = Gp.take_picture(0, 30)
             if debugMode == 2 or debugMode == -1:
                 cv2.imshow("Only the dots", img)
@@ -151,7 +155,7 @@ elif debugMode == 5:
             drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                                   p_x=worldVec[0], p_y=worldVec[1], p_z=0.3,
                                                   q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-            Gp.move_improved(group, positions=drop_block_pos)
+            Gp.avoid_move(group, positions=drop_block_pos)
             sys.exit()
             break
         else:
@@ -163,7 +167,7 @@ elif debugMode == 5:
                                          # q_x=0, q_y=0, q_z=0, q_w=0)
                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-        Gp.move_improved(group, positions=moveJoint)
+        Gp.smooth_move(limb, positions=moveJoint)
 
         # Retake image about the block for recognition
 
@@ -203,20 +207,20 @@ elif debugMode == 5:
         drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                               p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                               q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-        Gp.move_improved(group, pre_drop_block_pos, 0.5)
+        Gp.smooth_move(limb, pre_drop_block_pos)
         rospy.sleep(1)
-        Gp.move_improved(group, drop_block_pos, 0.5)
+        Gp.smooth_move(limb, drop_block_pos)
 
         block = square_list[0]
         block.setIndex(block_index)
         block.setLocation(movingLoc, dQ)
         # result_block_list.append(block)
 
-        rospy.sleep(1.5)
+        rospy.sleep(1)
         gripper.open()
         rospy.sleep(1)
 
-        Gp.move_improved(group, pre_drop_block_pos, 0.25)
+        Gp.smooth_move(limb, pre_drop_block_pos)
         # While loop stuff
         moved_times += 1
         block_index += 1
@@ -225,11 +229,12 @@ elif debugMode == 5:
 elif debugMode != 7:
     try:
         while square_list is not None and number_of_blocks_left != 0 and debugMode != 4:
+            Gp.smooth_move(limb, pre_grasp_pos)
             # Pre-grasping joint angles
             move_speed = 0.5
             if crazyMode is True:
                 move_speed = 1.0
-            Gp.move_improved(group, pre_grasp_pos, move_speed)
+            Gp.avoid_move(group, pre_grasp_pos, move_speed)
             rospy.sleep(1)
             square_list = None
 
@@ -260,7 +265,7 @@ elif debugMode != 7:
                 drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                                       p_x=worldVec[0], p_y=worldVec[1], p_z=0.3,
                                                       q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-                Gp.move_improved(group, positions=drop_block_pos, speed_ratio=0.5)
+                Gp.avoid_move(group, positions=drop_block_pos, speed_ratio=0.5)
                 sys.exit()
                 break
             else:
@@ -272,7 +277,7 @@ elif debugMode != 7:
                                              # q_x=0, q_y=0, q_z=0, q_w=0)
                                              q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-            Gp.move_improved(group, positions=moveJoint, speed_ratio=0.5)
+            Gp.smooth_move(limb, positions=moveJoint)
 
             # Retake image about the block for recognition
 
@@ -285,13 +290,9 @@ elif debugMode != 7:
             H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
             rospy.logdebug("found the best H and W: ", H, W)
 
-            if debugMode == 3:
-                print("grasp master predict", Ang)
             worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
             print("Matrix" + str(hom_Mtrx_c_b[0]) + " " + str(hom_Mtrx_c_b[1]))
             Ang = square_to_find.getAngle(square_list)
-            if debugMode == 3:
-                print("my predict", Ang)
             Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1)
             rospy.sleep(1)
 
@@ -299,31 +300,31 @@ elif debugMode != 7:
                 gripper.close()
                 rospy.sleep(1)
                 gripper.open()
-                Gp.move_improved(group, pre_grasp_pos, 0.3)
+                Gp.avoid_move(group, pre_grasp_pos, 0.3)
                 break
 
             # TODO: This allows the robot to vertically stack up the blocks
-            movingLoc = [0.72, 0 + 0.045, 0.005 + 0.045 * moved_times]
+            release_position = [0.72, 0 + 0.045, 0.005 + 0.045 * moved_times]
+            pre_release = [0.72, -0.8, 0.25 + 0.2 + 0.045 * moved_times]
             drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                                  p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
+                                                  p_x=release_position[0], p_y=release_position[1], p_z=release_position[2],
                                                   q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-
-            Gp.move_improved(group, drop_block_pos, 0.5)
+            pre_drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                                      p_x=pre_release[0], p_y=pre_release[1], p_z=pre_release[2],
+                                                      q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+            Gp.avoid_move(group, pre_drop_block_pos)
+            Gp.smooth_move(limb, drop_block_pos)
 
             block = square_list[0]
             block.setIndex(block_index)
-            block.setLocation(movingLoc, dQ)
+            block.setLocation(drop_block_pos, dQ)
             # result_block_list.append(block)
 
             rospy.sleep(1.5)
             gripper.open()
             rospy.sleep(1)
 
-            movingLoc = [0.72, -0.8, 0.25 + 0.2 + 0.045 * moved_times]
-            drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                                  p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
-                                                  q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-            Gp.move_improved(group, drop_block_pos, 0.3)
+            Gp.smooth_move(limb, drop_block_pos)
             # While loop stuff
             moved_times += 1
             block_index += 1
@@ -333,22 +334,22 @@ elif debugMode != 7:
             move_speed = 0.5
             if crazyMode is True:
                 move_speed = 1.0
-            Gp.move_improved(group, safe_move_r2l, move_speed)
+            Gp.smooth_move(limb, safe_move_r2l)
             rospy.sleep(1)
 
 if debugMode == 4:
     still_safe_move = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                            p_x=0, p_y=-0.8, p_z=.1,
                                            q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-    Gp.move_improved(group, still_safe_move, 0.5)
+    Gp.avoid_move(group, still_safe_move, 0.5)
     not_safe_move = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                          p_x=0, p_y=-0.8, p_z=-.2,
                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-    Gp.move_improved(group, not_safe_move, 0.01)
+    Gp.avoid_move(group, not_safe_move, 0.01)
 
 # required ending chuck -- starting
-Gp.remove_objects(scene)
-Gp.remove_camera_w_mount(scene)
+# Gp.remove_objects(scene)
+# Gp.remove_camera_w_mount(scene)
 moveComm.roscpp_shutdown()
 # required ending chuck -- ending
 

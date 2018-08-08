@@ -128,10 +128,11 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
 
 
 # ======================================================================================
-def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
+def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=None):
     if accel_ratio is None:
         accel_ratio = 0.1
-
+    if speed_ratio is None:
+        speed_ratio = 0.3
     traj = MotionTrajectory(limb=limb)
 
     wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
@@ -144,7 +145,7 @@ def move(limb, positions, speed_ratio, accel_ratio=None, timeout=None):
     traj.send_trajectory(timeout=timeout)
 
 
-def move_improved(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
     rospy.loginfo("Initializing Motion")
     if speed_ratio is None:
         speed_ratio = 0.5  # this is recommended speed
@@ -364,7 +365,7 @@ def pixelToWorld(u, v):
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     # 0.05 both
     y_offset = -0.04
-    x_offset = -0.02
+    x_offset = 0.025
 
     print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
@@ -458,16 +459,15 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     mid_grasp_joint = tuple(lstMid)
     down_grasp_joint = tuple(lstDown)
 
-    move(limb, positions=top_grasp_joint, speed_ratio=0.2)
+    smooth_move(limb, positions=top_grasp_joint, speed_ratio=0.3)
     rospy.sleep(2)
-    move(limb, positions=mid_grasp_joint, speed_ratio=0.2)
-    move(limb, positions=down_grasp_joint, speed_ratio=0.2)
-    if debugMode == 3:
-        return
-    rospy.sleep(2)
-    gripper.close()
+    smooth_move(limb, positions=mid_grasp_joint, speed_ratio=0.2)
+    smooth_move(limb, positions=down_grasp_joint, speed_ratio=0.2)
+    if debugMode != 3:
+        rospy.sleep(1)
+        gripper.close()
     rospy.sleep(1)
-    move(limb, positions=top_grasp_joint, speed_ratio=0.2)
+    smooth_move(limb, positions=top_grasp_joint, speed_ratio=0.2)
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
     print("Completing grasp execute\n------------------------------------------------------")

@@ -31,7 +31,7 @@ safe_move_r2l = [-0.504587890625, -1.9217080078125, 0.319630859375, 0.9335566406
 gest_position = [-0.3003134765625, -1.312572265625, 0.371109375, 0.4870419921875, 0.021302734375, 1.1612021484375,
                  1.62130078125]
 print limb.joint_angles()
-Gp.move(limb, safe_move_r2l, 0.2)
+Gp.smooth_move(limb, safe_move_r2l, 0.2)
 
 # print "Types of fruits: 1, apple; 2, avocado; 3, banana; 5, orange; 7, peach"
 # type_of_fruit = raw_input("Enter the fruit you want: ")
@@ -60,7 +60,7 @@ else:
 
 inputDir = "examples/Sawyer_GesRec/input_dir"
 outputDir = "examples/Sawyer_GesRec/output_dir"
-Gp.move(limb, gest_position, 0.2)
+Gp.smooth_move(limb, gest_position, 0.2)
 ges = GestRecB.GestureRecognition()
 
 rospy.sleep(1.5)
@@ -98,7 +98,7 @@ else:
 
 
 
-Gp.move(limb, pre_grasp_pos, 0.2)
+Gp.smooth_move(limb, pre_grasp_pos, 0.2)
 
 #
 # GESTURE RECOGNITION
@@ -130,7 +130,7 @@ else:
 #                                  p_x=worldVec[0], p_y=worldVec[1] + 0.05, p_z=0.5,  # q_x=0, q_y=0, q_z=0, q_w=0)
 #                                  q_x=rot[0], q_y=rot[1], q_z=rot[2], q_w=rot[3])
 
-Gp.move(limb, positions=moveJoint, move_speed=0.2)
+Gp.smooth_move(limb, positions=moveJoint, move_speed=0.2)
 
 frame = Gp.take_picture(1, 30)
 
@@ -169,11 +169,11 @@ rospy.sleep(1)
 drop_fruit_pos = [-0.402546875, -1.1622041015625, 0.3266787109375, 2.2412666015625, -0.301185546875,
                   0.469794921875,
                   -1.2894443359375]
-Gp.move(limb, drop_fruit_pos, 0.2)
+Gp.smooth_move(limb, drop_fruit_pos, 0.2)
 rospy.sleep(1)
 gripper.open()
 rospy.sleep(0.5)
-Gp.move(limb, safe_move_r2l, 0.2)
+Gp.smooth_move(limb, safe_move_r2l, 0.2)
 rospy.sleep(0.5)
 
 # Done

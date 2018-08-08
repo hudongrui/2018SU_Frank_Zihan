@@ -29,9 +29,9 @@ pre_drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=Tru
 drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                       p_x=movingLoc[0], p_y=movingLoc[1], p_z=movingLoc[2],
                                       q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-Gp.move(limb, pre_drop_block_pos, 0.2)
+Gp.smooth_move(limb, pre_drop_block_pos, 0.2)
 rospy.sleep(1)
-Gp.move(limb, drop_block_pos, 0.2)
+Gp.smooth_move(limb, drop_block_pos, 0.2)
 rospy.sleep(1)
 
 #####################################################################################################################

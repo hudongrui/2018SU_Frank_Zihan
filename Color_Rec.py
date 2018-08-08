@@ -27,7 +27,7 @@ else:
                      1.837322265625,
                      -1.4236279296875]
 
-Gp.move(limb, pre_grasp_pos, 0.3)
+Gp.smooth_move(limb, pre_grasp_pos, 0.3)
 # print limb.joint_angles()
 while 1:
     print "Types of fruits: 1, apple; 2, avocado; 3, banana; 4, grapes; 5, orange; 6, pear; 7, peach"
@@ -79,7 +79,7 @@ while 1:
                                          # q_x=0, q_y=0, q_z=0, q_w=0)
                                          q_x=rot[0], q_y=rot[1], q_z=rot[2], q_w=rot[3])
 
-    Gp.move(limb, positions=moveJoint, move_speed=0.2)
+    Gp.smooth_move(limb, positions=moveJoint, move_speed=0.2)
 
     frame = Gp.take_picture(1, 30)
 
@@ -116,7 +116,7 @@ while 1:
 
     rospy.sleep(1)
     gripper.open()
-    Gp.move(limb, pre_grasp_pos, 0.2)
+    Gp.smooth_move(limb, pre_grasp_pos, 0.2)
 
 
 

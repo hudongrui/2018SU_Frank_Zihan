@@ -16,7 +16,7 @@ pre_grasp_pos = [-1.7220224609375, -1.1679736328125, -0.138830078125, 1.01520117
                  1.7164111328125,
                  -1.8061787109375]
 # print limb.joint_angles()
-Gp.move(limb, pre_grasp_pos, 0.2)
+Gp.smooth_move(limb, pre_grasp_pos, 0.2)
 
 
 # #
@@ -54,9 +54,9 @@ else:
     pre_grasp_pos = [0.8807666015625, -1.1366826171875, 0.9580830078125, 0.99812890625, -0.3362646484375,
                      1.837322265625,
                      -1.4236279296875]
-    Gp.move(limb, safe_move_r2l, 0.2)
+    Gp.smooth_move(limb, safe_move_r2l, 0.2)
 
-Gp.move(limb, pre_grasp_pos, 0.2)
+Gp.smooth_move(limb, pre_grasp_pos, 0.2)
 
 #
 # GESTURE RECOGNITION
@@ -76,7 +76,7 @@ moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                  p_x=worldVec[0], p_y=worldVec[1] + 0.05, p_z=0.5,  # q_x=0, q_y=0, q_z=0, q_w=0)
                                  q_x=rot[0], q_y=rot[1], q_z=rot[2], q_w=rot[3])
 
-Gp.move(limb, positions=moveJoint, move_speed=0.2)
+Gp.smooth_move(limb, positions=moveJoint, move_speed=0.2)
 
 frame = Gp.take_picture(0, 30)
 
@@ -114,11 +114,11 @@ Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1])
 drop_fruit_pos = [-0.402546875, -1.1622041015625, 0.3266787109375, 2.2412666015625, -0.301185546875,
                   0.469794921875,
                   -1.2894443359375]
-Gp.move(limb, drop_fruit_pos, 0.2)
+Gp.smooth_move(limb, drop_fruit_pos, 0.2)
 rospy.sleep(1)
 gripper.open()
 rospy.sleep(0.5)
-Gp.move(limb, safe_move_r2l, 0.2)
+Gp.smooth_move(limb, safe_move_r2l, 0.2)
 rospy.sleep(0.5)
 
 
