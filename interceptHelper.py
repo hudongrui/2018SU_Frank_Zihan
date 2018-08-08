@@ -711,7 +711,7 @@ def get_location(list_of_coordinate):
     for loc in list_of_coordinate:
         px, py, pz = loc[0], loc[1], loc[2]
         theta = loc[3] / 180 * np.pi
-        ctr_x, ctr_y, ctr_z = 0.72, 0.045, 0.001
+        ctr_x, ctr_y, ctr_z = 0.72, -0.455, 0.07
         b_len = 0.048
         x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_len
         locations.append([x, y, z, theta])
@@ -729,4 +729,4 @@ def drop_destinations():
     # 45 degrees rotation clockwise
     preset_2 = [[0, 0, 0, 45]]
 
-    return get_location(preset_2)
+    return get_location(preset_1)
