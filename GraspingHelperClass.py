@@ -129,6 +129,7 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
 
 # ======================================================================================
 def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    rospy.sleep(1)
     if accel_ratio is None:
         accel_ratio = 0.1
     if speed_ratio is None:
@@ -143,9 +144,11 @@ def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=Non
     traj.append_waypoint(waypoint.to_msg())
 
     traj.send_trajectory(timeout=timeout)
+    rospy.sleep(1)
 
 
 def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    rospy.sleep(1)
     rospy.loginfo("Initializing Motion")
     if speed_ratio is None:
         speed_ratio = 0.5  # this is recommended speed
@@ -155,6 +158,7 @@ def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=Non
     rospy.sleep(1)
     group.stop()
     group.clear_pose_targets()
+    rospy.sleep(1)
 
 
 def record_them(data):
@@ -364,8 +368,8 @@ def pixelToWorld(u, v):
 # ======================================================================================
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     # 0.05 both
-    y_offset = -0.04
-    x_offset = 0.025
+    y_offset = -0.057
+    x_offset = 0.035
 
     print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
@@ -460,7 +464,6 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table):
     down_grasp_joint = tuple(lstDown)
 
     smooth_move(limb, positions=top_grasp_joint, speed_ratio=0.3)
-    rospy.sleep(2)
     smooth_move(limb, positions=mid_grasp_joint, speed_ratio=0.2)
     smooth_move(limb, positions=down_grasp_joint, speed_ratio=0.2)
     if debugMode != 3:
@@ -502,10 +505,10 @@ def take_picture(camera_port, ramp_frames):
     # to adjust light levels, if necessary
     for i in xrange(ramp_frames):
         temp = get_image()
-    # print("Taking image...")
+    print("Taking image...")
     # Take the actual image we want to keep
     final_im = get_image()
-    # print("Done")
+    print("Done")
 
     camera.release()
     return final_im

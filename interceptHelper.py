@@ -17,7 +17,7 @@ import rospy
 # 2     -- edge detection debug
 # 3     -- grasping angle debug
 
-debugMode = 0
+debugMode = 3
 
 
 ##################################################################################
@@ -528,7 +528,7 @@ class Rectangle:
                 output = theta2
             else:
                 output = theta1
-        return output
+        return output + 10 / 180 * math.pi
 
     def drawDiagonal1(self, image):
         color = (255, 0, 255)
@@ -711,8 +711,8 @@ def get_location(list_of_coordinate):
     for loc in list_of_coordinate:
         px, py, pz = loc[0], loc[1], loc[2]
         theta = loc[3] / 180 * np.pi
-        ctr_x, ctr_y, ctr_z = 0.72, -0.455, 0.07
-        b_len = 0.048
+        ctr_x, ctr_y, ctr_z = 0.3, -0.75, 0.085
+        b_len = 0.05
         x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_len
         locations.append([x, y, z, theta])
 
@@ -724,7 +724,7 @@ def get_location(list_of_coordinate):
 # with each unit length of one block length, which is 0.0045m
 def drop_destinations():
     # Pyramid
-    preset_1 = [[0, -1, 0, 0], [0, 0, 0, 0], [0, 1, 0, 0], [0, -0.5, 1, 0], [0, 0.5, 1, 0], [0, 0, 2, 0]]
+    preset_1 = [[0, -1, 0, -90], [0, 0, 0, -90], [0, 1, 0, -90], [0, -0.5, 1, -90], [0, 0.5, 1, -90], [0, 0, 2, -90]]
 
     # 45 degrees rotation clockwise
     preset_2 = [[0, 0, 0, 45]]
