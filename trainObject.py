@@ -128,7 +128,7 @@ elif debugMode == 5:
         move_speed = 0.5
         if crazyMode is True:
             move_speed = 1.0
-        Gp.smooth_move(limb, pre_grasp_pos)
+        Gp.avoid_move(group, pre_grasp_pos)
         square_list = None
 
         timeout = 0

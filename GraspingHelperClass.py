@@ -211,7 +211,7 @@ def load_objects(scene, planning_frame):
     box_pose.pose.position.y = 0.
     box_pose.pose.position.z = 0.
     box_name = "wall"
-    scene.add_box(box_name, box_pose, (0.3, 10, 10))
+    scene.add_box(box_name, box_pose, (0.3, 5, 3))
     rospy.sleep(1)
 
 
