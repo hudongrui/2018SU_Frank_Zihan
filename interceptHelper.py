@@ -712,8 +712,9 @@ def get_location(list_of_coordinate):
         px, py, pz = loc[0], loc[1], loc[2]
         theta = loc[3] / 180 * np.pi
         ctr_x, ctr_y, ctr_z = 0.3, -0.75, 0.085
-        b_len = 0.05
-        x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_len
+        b_len = 0.053
+        b_height = 0.045
+        x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_height
         locations.append([x, y, z, theta])
 
     return locations

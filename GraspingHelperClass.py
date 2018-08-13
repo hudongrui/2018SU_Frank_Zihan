@@ -214,6 +214,16 @@ def load_objects(scene, planning_frame):
     scene.add_box(box_name, box_pose, (0.3, 5, 3))
     rospy.sleep(1)
 
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    box_pose.header.frame_id = planning_frame  # must put it in the frame
+    box_pose.pose.position.x = 0.762
+    box_pose.pose.position.y = 0.
+    box_pose.pose.position.z = -0.455
+    box_name = "front table"
+    scene.add_box(box_name, box_pose, (1.08, 1.22, 0.91))
+    rospy.sleep(1)
+
 
 def load_camera_w_mount(scene, robot, planning_frame):
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
@@ -234,6 +244,8 @@ def remove_objects(scene):
     scene.remove_world_object("left table")
     rospy.sleep(1)
     scene.remove_world_object("wall")
+    rospy.sleep(1)
+    scene.remove_world_object("front table")
     rospy.sleep(1)
 
 
