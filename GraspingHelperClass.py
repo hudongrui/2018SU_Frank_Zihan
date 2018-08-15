@@ -26,16 +26,24 @@ from intera_core_msgs.srv import (
 
 ##############################################
 # added by Zihan
-# import go_to_cartesian_pose as smomo
 from numpy import float64
 from intera_motion_interface import (
     MotionTrajectory,
     MotionWaypoint,
     MotionWaypointOptions
 )
+from trajectory_msgs.msg import (
+    JointTrajectory,
+    JointTrajectoryPoint
+)
 
+from moveit_msgs.msg import RobotTrajectory
+
+# These imports are used in the train_object main code
+import moveit_msgs
 import moveit_commander
 import moveit_msgs.msg
+
 from math import pi
 from moveit_commander.conversions import pose_to_list
 from moveit_commander.conversions import pose_to_list
@@ -51,10 +59,11 @@ from moveit_commander.conversions import pose_to_list
 # 3     -- grasp angle debug -- from Zihan: don't use it
 
 debugMode = 0
+
+
 ##################################################################################
 
 
-# ======================================================================================
 def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, q_w):
     ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
     iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
@@ -124,11 +133,13 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
         return return_joint
 
 
-# ======================================================================================
-
-
-# ======================================================================================
 def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    # this move method is obtained from Intera motion control interface
+    # limb -- the limb object of the Sawyer robot
+    # position -- a list with a length of 7, specifying the goal state joint position
+    # speed_ratio -- the speed of robot arm, [0, 1]
+    # accel_ratio -- the acceleration of the robot arm, [0, 1]
+    # timeout -- the timeout for this specific motion; infinite when None
     rospy.sleep(1)
     if accel_ratio is None:
         accel_ratio = 0.1
@@ -147,7 +158,10 @@ def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=Non
     rospy.sleep(1)
 
 
-def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+def avoid_move(group, positions, speed_ratio=None):
+    # this move method is obtained from MoveIt tutorial
+    # group -- move group commander from base code
+    # position -- a list with a length of 7, specifying the goal state joint position
     rospy.sleep(1)
     rospy.loginfo("Initializing Motion")
     if speed_ratio is None:
@@ -161,40 +175,11 @@ def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=Non
     rospy.sleep(1)
 
 
-def record_them(data):
-    print data
-    print "got here-----------------------#####"
-
-
-def move_move(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
-    if speed_ratio is None:
-        speed_ratio = 0.3
-
-    if accel_ratio is None:
-        accel_ratio = 0.1
-    # group.set_max_velocity_scaling_factor(speed_ratio)
-    plan = group.plan(positions)
-    rospy.Subscriber('moveit_msgs/RobotTrajectory', Float64MultiArray, record_them)
-    # print plan.positions
-    # plan = msg_to_string(plan)
-    traj = MotionTrajectory(limb=limb)
-    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
-                                     max_joint_accel=accel_ratio)
-
-    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
-
-    waypoint.set_joint_angles(joint_angles=positions)
-    traj.append_waypoint(waypoint.to_msg())
-
-    traj.send_trajectory(timeout=timeout)
-    # group.go(positions, wait=True)
-    # group.execute(plan, wait=True)
-    group.stop()
-    group.clear_pose_targets()
-
-
 def load_objects(scene, planning_frame):
+    # Loading environment objects including left table, frontal desk, wall
     rospy.loginfo("Loading environment objects ...")
+
+    # frontal table dimensions: x -- 42' y -- 30' z -- '
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
@@ -207,6 +192,15 @@ def load_objects(scene, planning_frame):
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
+    box_pose.pose.position.x = 0.3556
+    box_pose.pose.position.y = 1.524
+    box_pose.pose.position.z = -0.51
+    box_name = "right table"
+    scene.add_box(box_name, box_pose, (1.9, 0.93, 0.86))
+
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    box_pose.header.frame_id = planning_frame  # must put it in the frame
     box_pose.pose.position.x = -0.6
     box_pose.pose.position.y = 0.
     box_pose.pose.position.z = 0.
@@ -214,6 +208,7 @@ def load_objects(scene, planning_frame):
     scene.add_box(box_name, box_pose, (0.3, 5, 3))
     rospy.sleep(1)
 
+    # frontal table dimensions: x -- 42' y -- 48' z -- 37'
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
@@ -221,18 +216,16 @@ def load_objects(scene, planning_frame):
     box_pose.pose.position.y = 0.
     box_pose.pose.position.z = -0.455
     box_name = "front table"
-    scene.add_box(box_name, box_pose, (1.08, 1.22, 0.91))
+    scene.add_box(box_name, box_pose, (1.4, 1.4, 1))
     rospy.sleep(1)
 
 
-def load_camera_w_mount(scene, robot, planning_frame):
+def load_camera_w_mount(scene):
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     link_name = 'right_l6'
     box_pose.header.frame_id = 'right_l6'  # must put it in the frame
-    # box_pose.pose.position.x = 0.
     box_pose.pose.position.y = -0.09
-    # box_pose.pose.position.z = 0.
     box_name = "camera_w_mount"
     scene.attach_box(link_name, box_name, box_pose, size=(0.08, 0.08, 0.08))
     rospy.sleep(1)
@@ -247,6 +240,8 @@ def remove_objects(scene):
     rospy.sleep(1)
     scene.remove_world_object("front table")
     rospy.sleep(1)
+    scene.remove_world_object("right table")
+    rospy.sleep(1)
 
 
 def remove_camera_w_mount(scene):
@@ -257,6 +252,69 @@ def remove_camera_w_mount(scene):
     rospy.sleep(1)
     scene.remove_world_object("camera_w_mount")
     rospy.sleep(1)
+
+
+def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
+    if speed_ratio is None:
+        speed_ratio = 0.3
+    if accel_ratio is None:
+        accel_ratio = 0.1
+    plan = group.plan(target)
+    rospy.sleep(1)
+    step = []
+    for point in plan.joint_trajectory.points:
+        step.append(point.positions)
+    traj = MotionTrajectory(limb=limb)
+    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
+                                     max_joint_accel=accel_ratio)
+    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
+    for point in step:
+        waypoint.set_joint_angles(joint_angles=point)
+    traj.append_waypoint(waypoint.to_msg())
+    traj.send_trajectory(timeout=timeout)
+    group.stop()
+    group.clear_pose_targets()
+
+
+def get_stupid_step():
+    step1 = [-0.50294140625, -1.921193359375, 0.319775390625, 0.9303984375, 0.1278056640625, 2.5493740234375,
+             -1.3515068359375]
+    step2 = [-0.5692812984546207, -1.841113542705462, 0.26614922733091584, 0.9182290631710579, 0.14617474411985124,
+             2.4876788021875655, -1.1922914964694393]
+    step3 = [-0.6356211906592416, -1.7610337260359241, 0.2125230640368317, 0.9060596888421157, 0.16454382417720248,
+             2.4259835809376313, -1.0330761570013784]
+    step4 = [-0.7019610828638625, -1.6809539093663861, 0.1588969007427475, 0.8938903145131737, 0.18291290423455375,
+             2.3642883596876967, -0.8738608175333178]
+    step5 = [-0.7683009750684833, -1.600874092696848, 0.10527073744866339, 0.8817209401842316, 0.20128198429190497,
+             2.302593138437762, -0.7146454780652571]
+    step6 = [-0.834640867273104, -1.52079427602731, 0.05164457415457924, 0.8695515658552895, 0.21965106434925624,
+             2.2408979171878274, -0.5554301385971964]
+    step7 = [-0.9009807594777249, -1.440714459357772, -0.001981589139504969, 0.8573821915263474, 0.23802014440660751,
+             2.179202695937893, -0.3962147991291356]
+    step8 = [-0.9673206516823457, -1.3606346426882343, -0.055607752433589064, 0.8452128171974054, 0.25638922446395873,
+             2.1175074746879585, -0.23699945966107494]
+    step9 = [-1.0336605438869666, -1.2805548260186963, -0.10923391572767321, 0.8330434428684632, 0.27475830452131,
+             2.055812253438024, -0.07778412019301428]
+    step10 = [-1.1000004360915874, -1.2004750093491583, -0.16286007902175742, 0.8208740685395212, 0.2931273845786613,
+              1.9941170321880897, 0.0814312192750466]
+    step11 = [-1.1663403282962084, -1.1203951926796203, -0.21648624231584152, 0.808704694210579, 0.3114964646360125,
+              1.932421810938155, 0.24064655874310725]
+    step12 = [-1.2326802205008291, -1.0403153760100823, -0.2701124056099257, 0.796535319881637, 0.3298655446933637,
+              1.8707265896882204, 0.39986189821116813]
+    step13 = [-1.29902011270545, -0.9602355593405444, -0.3237385689040099, 0.7843659455526949, 0.348234624750715,
+              1.809031368438286, 0.5590772376792288]
+    step14 = [-1.3653600049100707, -0.8801557426710065, -0.3773647321980939, 0.7721965712237528, 0.36660370480806626,
+              1.7473361471883515, 0.7182925771472892]
+    step15 = [-1.4316998971146915, -0.8000759260014687, -0.4309908954921781, 0.7600271968948107, 0.38497278486541747,
+              1.6856409259384169, 0.8775079166153501]
+    step16 = [-1.4980397893193125, -0.7199961093319307, -0.4846170587862623, 0.7478578225658686, 0.40334186492276874,
+              1.6239457046884824, 1.036723256083411]
+    step17 = [-1.5643796815239333, -0.6399162926623927, -0.5382432220803464, 0.7356884482369266, 0.42171094498011996,
+              1.562250483438548, 1.1959385955514714]
+    step18 = [-1.630719573728554, -0.5598364759928547, -0.5918693853744306, 0.7235190739079844, 0.44008002503747123,
+              1.5005552621886133, 1.3551539350195323]
+    return [step1, step2, step3, step4, step5, step6, step7, step8, step9, step10,
+            step11, step12, step13, step14, step15, step16, step17, step18]
 
 
 def check_if_attached(scene, box_name, box_is_attached, box_is_known):
@@ -282,7 +340,9 @@ def check_if_attached(scene, box_name, box_is_attached, box_is_known):
 
     # If we exited the while loop without returning then we timed out
     return False
-# ======================================================================================
+
+
+########################################################################################
 
 
 # ======================================================================================
@@ -651,6 +711,7 @@ def find_element_within_range(image, imgHSV, lower_range, upper_range, color):
     # cv2.waitKey(0)
     return center
 
+
 # ======================================================================================
 
 # ======================================================================================
@@ -724,6 +785,8 @@ def detect_block(image):
         return None, image
     else:
         return locations[numbers.index(block_num)], img_show
+
+
 # ============================================================================================
 
 
@@ -742,4 +805,3 @@ def euler_to_quaternion(x=None, y=None, z=None):
     else:
         z = z - math.pi
     return transformations.quaternion_from_euler(x, y, z)
-
