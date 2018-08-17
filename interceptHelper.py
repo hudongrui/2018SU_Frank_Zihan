@@ -403,9 +403,6 @@ def categorize_rect(intersections):
     # print("there are ", len(temp_list), " left after removing 0 length")
 
     list_of_squares = rm_duplicates(list_of_squares)
-    if debugMode == 0:
-        elapsed_time = time.time() - start_time
-        print("the time elapsed for categorizing square is " + str(elapsed_time))
     return list_of_squares
 
 
@@ -509,21 +506,18 @@ class Rectangle:
                         min_distance_center = other_center
             correction_line = Line(self.center, min_distance_center)
         else:
-            # correction_line = Line(self.center, Intersect(self.center.x, self.center.y + self.side_length / 2))
             correction_line = Line(self.center, Intersect(0, 0))
         line1 = Line(self.point1, self.point2)
         line2 = Line(self.point1, self.point3)
-        theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
-        theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+        theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi * 2)
+        theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi * 2)
         if debugMode == 3:
             if abs(theta1) > abs(theta2):
                 output = theta2
             else:
                 output = theta1
         else:
-            correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
-            # print("the first option is ", theta1)
-            # print("the second option is ", theta2)
+            correction_theta = refine_range(correction_line.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi * 2)
             if abs(theta1 - correction_theta) < abs(theta2 - correction_theta):
                 output = theta2
             else:
