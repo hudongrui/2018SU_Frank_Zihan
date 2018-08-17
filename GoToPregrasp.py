@@ -4,6 +4,7 @@ import intera_interface
 import intera_interface.head_display as head
 import cv2
 import GraspingHelperClass as Gp
+import sys
 
 ############################################################
 # This script takes the robot to pre-grasp position,
@@ -18,11 +19,28 @@ global gripper
 gripper = intera_interface.Gripper('right_gripper')
 gripper.open()
 headDisplay = head.HeadDisplay()
-
 rospy.sleep(1)
 # Pre-grasping joint angles
 pre_grasp_pos = [-1.630677734375, -0.559880859375, -0.5919228515625, 0.723537109375, 0.4400439453125, 1.5005537109375,
                  1.35516796875]
+
+moveComm = Gp.moveit_commander
+moveComm.roscpp_initialize(sys.argv)
+
+robot = moveComm.RobotCommander()
+scene = moveComm.PlanningSceneInterface()
+
+group_name = "right_arm"
+group = moveComm.MoveGroupCommander(group_name)
+display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
+                                               Gp.moveit_msgs.msg.DisplayTrajectory,
+                                               queue_size=20)
+
+planning_frame = group.get_planning_frame()
+
+eef_link = group.get_end_effector_link()
+Gp.load_objects(scene, planning_frame)
+Gp.load_camera_w_mount(scene)
 
 # print limb.joint_angles()
 dQ = [-0.7218173645115756, -0.6913802266664445, 0.014645313419448478, 0.027542499143427157]
@@ -31,7 +49,7 @@ drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                       p_x=0.2, p_y=-0.7869, p_z=0.4432,
                                       q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-Gp.smooth_move(limb, pre_grasp_pos, 0.2)
+Gp.move_move(limb, group, pre_grasp_pos, 0.2)
 rospy.sleep(1)
 
 #####################################################################################################################

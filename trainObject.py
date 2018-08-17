@@ -12,7 +12,7 @@ import GraspingHelperClass as Gp
 import graspObjectImageFunc as gi
 import interceptHelper as iH
 
-rospy.init_node("FrankZihanSum")
+rospy.init_node("FrankZihanSu")
 global limb
 limb = intera_interface.Limb('right')
 global gripper
