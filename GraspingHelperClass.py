@@ -150,25 +150,25 @@ def load_objects(scene, planning_frame):
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = 0.
-    box_pose.pose.position.y = -0.86
-    box_pose.pose.position.z = -0.51
+    box_pose.pose.position.x = in_to_m(4) + in_to_m(48)
+    box_pose.pose.position.y = in_to_m(-15) + in_to_m(-18)
+    box_pose.pose.position.z = in_to_m(-3.5) + in_to_m(-20)
     box_name = "left table"
-    scene.add_box(box_name, box_pose, (2, 0.762, 0.86))
+    scene.add_box(box_name, box_pose, (in_to_m(98), in_to_m(38), in_to_m(42)))
 
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = 0.3556
-    box_pose.pose.position.y = 1.524
-    box_pose.pose.position.z = -0.51
-    box_name = "right table"
-    scene.add_box(box_name, box_pose, (1.9, 0.93, 0.86))
+    box_pose.pose.position.x = in_to_m(-13.5) + in_to_m(-8.5/ 2)
+    box_pose.pose.position.y = in_to_m(-32.5) + in_to_m(-20 / 2)
+    box_pose.pose.position.z = 0
+    box_name = "left pillar"
+    scene.add_box(box_name, box_pose, (in_to_m(10), in_to_m(22), 3))
 
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = -0.6
+    box_pose.pose.position.x = in_to_m(-25)
     box_pose.pose.position.y = 0.
     box_pose.pose.position.z = 0.
     box_name = "wall"
@@ -177,14 +177,30 @@ def load_objects(scene, planning_frame):
 
     # frontal table dimensions: x -- 42' y -- 48' z -- 37'
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    x = 24 # inches
+    y = 48 # inches
+    z = 28 # inches
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = 0.762
-    box_pose.pose.position.y = 0.
-    box_pose.pose.position.z = -0.455
+    box_pose.pose.position.x = in_to_m(15) + in_to_m(x / 2)
+    box_pose.pose.position.y = in_to_m(8)
+    box_pose.pose.position.z = in_to_m(-10) + in_to_m(-z / 2)
     box_name = "front table"
-    scene.add_box(box_name, box_pose, (1.4, 1.4, 1))
+    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
     rospy.sleep(1)
+
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    box_pose.header.frame_id = planning_frame  # must put it in the frame
+    box_pose.pose.position.x = in_to_m(7) + in_to_m(15.25)
+    box_pose.pose.position.y = in_to_m(-39) + in_to_m(-6.5)
+    box_pose.pose.position.z = in_to_m(2) + in_to_m(15)
+    box_name = "left table items"
+    scene.add_box(box_name, box_pose, (in_to_m(30.5), in_to_m(13), in_to_m(30 + 20)))
+
+
+def in_to_m(inch):
+    return inch * 2.54 / 100
 
 
 def load_camera_w_mount(scene):
@@ -208,7 +224,9 @@ def remove_objects(scene):
     rospy.sleep(1)
     scene.remove_world_object("front table")
     rospy.sleep(1)
-    scene.remove_world_object("right table")
+    scene.remove_world_object("left table items")
+    rospy.sleep(1)
+    scene.remove_world_object("left pillar")
     rospy.sleep(1)
 
 
@@ -340,6 +358,7 @@ def pixelToWorld(u, v):
 # ======================================================================================
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group):
     # 0.05 both
+    # TODO
     y_offset = -0.057
     x_offset = 0.035
 
@@ -435,11 +454,13 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group):
     mid_grasp_joint = tuple(lstMid)
     down_grasp_joint = tuple(lstDown)
 
-    move_move(limb, group, positions=top_grasp_joint, speed_ratio=0.3)
-    move_move(limb, group, positions=mid_grasp_joint, speed_ratio=0.2)
-    move_move(limb, group, positions=down_grasp_joint, speed_ratio=0.2)
+    # TODO: move_move(limb, group, positions=..., speed_ratio=...)
+    move_move(limb, group, top_grasp_joint, speed_ratio=0.3)
+    move_move(limb, group, mid_grasp_joint, speed_ratio=0.2)
+    move_move(limb, group, down_grasp_joint, speed_ratio=0.2)
     rospy.sleep(1)
-    move_move(limb, group, positions=top_grasp_joint, speed_ratio=0.2)
+    gripper.close()
+    move_move(limb, group, top_grasp_joint, speed_ratio=0.2)
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
     print("Completing grasp execute\n------------------------------------------------------")

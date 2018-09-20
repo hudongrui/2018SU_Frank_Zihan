@@ -2,15 +2,8 @@ import subprocess
 import rospy
 import intera_interface
 import intera_interface.head_display as head
-import cv2
 import GraspingHelperClass as Gp
 import sys
-
-############################################################
-# This script takes the robot to pre-grasp position,
-# takes a picture right on top of the workspace, and save it.
-# This script is primarily used for debugging.
-############################################################
 
 rospy.init_node("GraspingDemo")
 global limb
@@ -46,20 +39,5 @@ Gp.load_camera_w_mount(scene)
 
 # print limb.joint_angles()
 dQ = Gp.euler_to_quaternion()
-print dQ
 
-drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                      p_x=0.8, p_y=0.2, p_z=0.4432,
-                                      q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-
-Gp.move_move(limb, group, drop_block_pos, 0.2)
-rospy.sleep(1)
-
-#####################################################################################################################
-# Here is to take a picture at pre-grasping postion
-# frame = Gp.take_picture(0, 30)
-# cv2.imshow("Displaying Image", frame)
-# cv2.waitKey()
-# cv2.destroyAllWindows()
-# cv2.imwrite("/home/team18/Frank_Ray_Zihan/2018SU_Frank_Zihan/TestPictures/With_Flash.jpg", frame)
-######################################################################################################################
+Gp.move_move(limb, group, camera_center_human_left, 0.2)

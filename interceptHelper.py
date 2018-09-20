@@ -687,9 +687,9 @@ def square_img_to_centers_list(img, square=None):
         # cv2.imshow("Canny Edges", edges)
         # cv2.imshow("Originally detected lines", unext_img)
         # cv2.imshow("Extend the lines", ext_img)
-        # cv2.imshow("Displaying Result", blank_image)
-        # cv2.waitKey()
-        # cv2.destroyAllWindows()
+        cv2.imshow("Displaying Result", blank_image)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
         return found_rect
     except TypeError:
         return None
@@ -700,12 +700,25 @@ def square_img_to_centers_list(img, square=None):
 
 
 # Calculate actual location in the base-centered coordinate
-def get_location(list_of_coordinate):
+def get_location(list_of_coordinate, workspace):
+    # x = 26in  y = -3.5in  z = -6.5in
+    # x = 26in  y = 20.5in  z = -6.5in
+
+    # Default value for workspace is false, indicating drop_off_location should be on the right
+    if workspace:
+        # Workspace on human's left
+        ctr_x, ctr_y, ctr_z = 0.66, -0.089, -0.165
+        ctr_x, ctr_y, ctr_z = 0.66, -0.089, 0
+    else:
+        # Workspace on human's right
+        ctr_x, ctr_y, ctr_z = 0.66, 0.521, -0.165
+        ctr_x, ctr_y, ctr_z = 0.66, 0.521, 0
+
+
     locations = []
     for loc in list_of_coordinate:
         px, py, pz = loc[0], loc[1], loc[2]
         theta = loc[3] / 180 * np.pi
-        ctr_x, ctr_y, ctr_z = 0.3, -0.75, 0.085
         b_len = 0.053
         b_height = 0.045
         x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_height
@@ -717,11 +730,17 @@ def get_location(list_of_coordinate):
 # Program a series of location here for the robot to drop of the block
 # We construct a new coordinate system where the center drop-off location is origin,
 # with each unit length of one block length, which is 0.0045m
-def drop_destinations():
+def drop_destinations(workspace):
+    # Center of workspace
+    preset_0 = [[0, 0, 0, 0]]
+
     # Pyramid
     preset_1 = [[0, -1, 0, -90], [0, 0, 0, -90], [0, 1, 0, -90], [0, -0.5, 1, -90], [0, 0.5, 1, -90], [0, 0, 2, -90]]
 
     # 45 degrees rotation clockwise
     preset_2 = [[0, 0, 0, 45]]
 
-    return get_location(preset_1)
+    # two_Blocks
+    preset_3 = [[0, 0, 0, 0], [0, 0, 2, 0]]
+
+    return get_location(preset_3, workspace)
