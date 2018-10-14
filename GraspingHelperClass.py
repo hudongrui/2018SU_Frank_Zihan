@@ -47,6 +47,7 @@ import moveit_msgs.msg
 from math import pi
 from moveit_commander.conversions import pose_to_list
 from moveit_commander.conversions import pose_to_list
+import interceptHelper as iH
 
 
 def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, q_w):
@@ -149,54 +150,54 @@ def load_objects(scene, planning_frame):
 
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     box_pose = PoseStamped()
+    x = 72
+    y = 30
+    z = 34
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(4) + in_to_m(48)
-    box_pose.pose.position.y = in_to_m(-15) + in_to_m(-18)
-    box_pose.pose.position.z = in_to_m(-3.5) + in_to_m(-20)
+    box_pose.pose.position.x = in_to_m(-15) + in_to_m(x / 2)
+    box_pose.pose.position.y = in_to_m(18) + in_to_m(y / 2)
+    box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
+    box_name = "right table"
+    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+
+    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    box_pose = PoseStamped()
+    x = 30
+    y = 72
+    z = 34
+    box_pose.header.frame_id = planning_frame  # must put it in the frame
+    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
+    box_pose.pose.position.y = in_to_m(-92) + in_to_m(y / 2)
+    box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
     box_name = "left table"
-    scene.add_box(box_name, box_pose, (in_to_m(98), in_to_m(38), in_to_m(42)))
+    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    x = 0.3
+    y = 300
+    z = 300
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-13.5) + in_to_m(-8.5/ 2)
-    box_pose.pose.position.y = in_to_m(-32.5) + in_to_m(-20 / 2)
-    box_pose.pose.position.z = 0
-    box_name = "left pillar"
-    scene.add_box(box_name, box_pose, (in_to_m(10), in_to_m(22), 3))
-
-    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    box_pose = PoseStamped()
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-25)
-    box_pose.pose.position.y = 0.
-    box_pose.pose.position.z = 0.
+    box_pose.pose.position.x = in_to_m(-19) + in_to_m(x / 2)
+    box_pose.pose.position.y = in_to_m(-150) + in_to_m(y / 2)
+    box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
     box_name = "wall"
-    scene.add_box(box_name, box_pose, (0.3, 5, 3))
+    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
     rospy.sleep(1)
 
     # frontal table dimensions: x -- 42' y -- 48' z -- 37'
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    x = 24 # inches
-    y = 48 # inches
-    z = 28 # inches
+    x = 9 # inches
+    y = 20 # inches
+    z = 300 # inches
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(15) + in_to_m(x / 2)
-    box_pose.pose.position.y = in_to_m(8)
-    box_pose.pose.position.z = in_to_m(-10) + in_to_m(-z / 2)
-    box_name = "front table"
+    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
+    box_pose.pose.position.y = in_to_m(48) + in_to_m(-y / 2)
+    box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
+    box_name = "pillar"
     scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
     rospy.sleep(1)
-
-    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    box_pose = PoseStamped()
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(7) + in_to_m(15.25)
-    box_pose.pose.position.y = in_to_m(-39) + in_to_m(-6.5)
-    box_pose.pose.position.z = in_to_m(2) + in_to_m(15)
-    box_name = "left table items"
-    scene.add_box(box_name, box_pose, (in_to_m(30.5), in_to_m(13), in_to_m(30 + 20)))
 
 
 def in_to_m(inch):
@@ -218,15 +219,13 @@ def load_camera_w_mount(scene):
 def remove_objects(scene):
     rospy.loginfo("Removing obstacles")
     rospy.sleep(1)
-    scene.remove_world_object("left table")
+    scene.remove_world_object("right table")
     rospy.sleep(1)
     scene.remove_world_object("wall")
     rospy.sleep(1)
-    scene.remove_world_object("front table")
+    scene.remove_world_object("pillar")
     rospy.sleep(1)
-    scene.remove_world_object("left table items")
-    rospy.sleep(1)
-    scene.remove_world_object("left pillar")
+    scene.remove_world_object("left table")
     rospy.sleep(1)
 
 
@@ -290,6 +289,7 @@ def check_if_attached(scene, box_name, box_is_attached, box_is_known):
 # ======================================================================================
 def pixelToWorld(u, v):
     # u is x, v is y
+    ## all the ## comment are from Zihan && Frank summer research project
     listener = tf.TransformListener()
     rate = rospy.Rate(10.0)
 
@@ -307,46 +307,50 @@ def pixelToWorld(u, v):
 
         rate.sleep()
 
+    # print trans
+    # print rot
+
     z = trans[2]
     trans = np.array(trans)
     trans.shape = (3, 1)
-    hom_Mtrx_g_b = transformations.quaternion_matrix(rot)
+
+    # print trans
+    
+    hom_Mtrx_g_b = transformations.quaternion_matrix(rot) ## using quaternion matrix to get transformation matrix
+
+    ## modifying the x-y-z position vector
     hom_Mtrx_g_b[0][3] = trans[0]
     hom_Mtrx_g_b[1][3] = trans[1]
     hom_Mtrx_g_b[2][3] = trans[2]
+    # print hom_Mtrx_g_b
 
     # homogeneous transformation from /camera to /gripper
-    hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0])
+    hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0]) ## this is the key thing to check and verify
+    # print hom_Mtrx_c_g
 
-    # TODO: ---------------- fuck this shit I am out -------------------------
-    # https://youtu.be/5FjWe31S_0g
-    # TODO: change this value to address camera offset in x direction -- x is in y direction x increase, y increase
-    # hom_Mtrx_c_g[0][3] = -0.065
-    # hom_Mtrx_c_g[0][3] = -0.07
-    # TODO: change this value to address camera offset in y direction -- y is in x direction y increase, x increase
-    # - 0.03
-    # hom_Mtrx_c_g[1][3] = -0.009
-    # TODO: change this value to address camera offset in z direction
-    # hom_Mtrx_c_g[2][3] = 0.07
-    #
-    # TODO: ---------------- fuck this shit I am out -------------------------
-
+    ## this is just calculating the transformation matrix from base to camera
     hom_Mtrx_c_b = np.dot(hom_Mtrx_g_b, hom_Mtrx_c_g)
-
+    # print hom_Mtrx_c_b
     Mtrx_c_b = hom_Mtrx_c_b[:3, :4]
+    # print Mtrx_c_b
     Mtrx_c_b = np.matrix(Mtrx_c_b)
+    print Mtrx_c_b
 
     camMtrx = camCalib.getCamMatrx()
+    # print camMtrx
     camMtrxInv = np.linalg.inv(camMtrx)
+    # print camMtrxInv
     camMtrxInv = np.matrix(camMtrxInv)
+    # print camMtrxInv
 
-    # z = 0.5  # height of camera above the table
     pixVec = np.matrix([[z * u], [z * v], [z * 1]])  # pixel vector augmented by 1
+    print pixVec
 
     # testVec = camMtrxInv*z*pixVec
     one = np.array([1])
     one.shape = (1, 1)
     camVec = np.concatenate((camMtrxInv * pixVec, one), axis=0)
+    print camVec
     worldVec = Mtrx_c_b * camVec
 
     return worldVec, hom_Mtrx_c_b, rot
@@ -356,12 +360,17 @@ def pixelToWorld(u, v):
 
 
 # ======================================================================================
-def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group):
+def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace):
     # 0.05 both
     # TODO
-    y_offset = -0.057
-    x_offset = 0.035
-
+    if workspace:
+        y_offset = 0.015
+        x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
+    else:
+        y_offset = 0.010
+        x_offset = 0.065
+    # y_offset = 0.005
+    # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
     print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
     print('endEffPos, x: ', endEffPos[0])
@@ -383,73 +392,41 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group):
     # print(transformations.rotation_from_matrix(hom_rotGrasp1))
 
     angles = limb.joint_angles()
-    endEffAng = angles['right_j6']
+    endEffAng = angles['right_j6'] # currently 128 degree
     print 'Current Joint 6 Angle in World Frame is: ', endEffAng * 180.0 / np.pi
-    targetAng = endEffAng - (np.pi / 2.0) + Ang + (np.pi / 2.0)
+    targetAng = endEffAng + Ang
 
     x_target = (endEffPos[0] + x_ref) * 0.5
     y_target = (endEffPos[1] + y_ref) * 0.5
-
-    if table == 1:
-        # User left-hand side
-        # top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-        #                                     p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.5,
-        #                                     q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-        #                                     q_w=rotOriginal[3])
-        # mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-        #                                     p_x=x_target + 0.05, p_y=y_target + 0.01, p_z=0.3,
-        #                                     q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-        #                                     q_w=rotOriginal[3])
-        # down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-        #                                      p_x=x_target + 0.03, p_y=y_target + 0.01, p_z=0.1,
-        #                                      q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-        #                                      q_w=rotOriginal[3])
-        top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                            p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.5,
-                                            q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-                                            q_w=rotOriginal[3])
-        mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                            p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.3,
-                                            q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-                                            q_w=rotOriginal[3])
-        down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                             p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
-                                             q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-                                             q_w=rotOriginal[3])
-    else:
-        # User right-hand side
-        top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                            p_x=x_target - 0.05, p_y=y_target - 0.017, p_z=0.5,
-                                            q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-                                            q_w=rotOriginal[3])
-        mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                            p_x=x_target - 0.02, p_y=y_target - 0.017, p_z=0.3,
-                                            q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-                                            q_w=rotOriginal[3])
-        down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                             p_x=x_target - 0.02, p_y=y_target - 0.017, p_z=0.11,
-                                             q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2],
-                                             q_w=rotOriginal[3])
+    quat_replace = euler_to_quaternion(z=-Ang)
+    top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.2,
+                                        q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                        q_w=quat_replace[3])
+    mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
+                                        q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                        q_w=quat_replace[3])
+    down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                         p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=-0.08,
+                                         q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                         q_w=quat_replace[3])
 
     # top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
     #                                     p_x=x_target+0.01, p_y=y_target+0.01, p_z=0.5,  # q_x=0, q_y=0, q_z=0, q_w=0)
-    #                                     q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2], q_w=rotOriginal[3])
+    #                                     q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2], q_w=quat_replace[3])
     #
     # mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
     #                                     p_x=x_target+0.01, p_y=y_target+0.01, p_z=0.3,  # q_x=0, q_y=0, q_z=0, q_w=0)
-    #                                     q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2], q_w=rotOriginal[3])
+    #                                     q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2], q_w=quat_replace[3])
     #
     # down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
     #                                      p_x=x_target+0.01, p_y=y_target+0.01, p_z=0.1,
-    #                                      q_x=rotOriginal[0], q_y=rotOriginal[1], q_z=rotOriginal[2], q_w=rotOriginal[3])
+    #                                      q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2], q_w=quat_replace[3])
 
     lstTop = list(top_grasp_joint)
     lstMid = list(mid_grasp_joint)
     lstDown = list(down_grasp_joint)
-    print 'Grasp Angle in World Frame is: ', targetAng * 180.0 / np.pi
-    lstTop[6] = targetAng
-    lstMid[6] = targetAng
-    lstDown[6] = targetAng
     top_grasp_joint = tuple(lstTop)
     mid_grasp_joint = tuple(lstMid)
     down_grasp_joint = tuple(lstDown)
@@ -484,7 +461,6 @@ def take_picture(camera_port, ramp_frames):
     # Now we can initialize the camera capture object with the cv2.VideoCapture class.
     # All it needs is the index to a camera port.
     camera = cv2.VideoCapture(camera_port)
-
     # Captures a single image from the camera and returns it in PIL format
     def get_image():
         # read is the easiest way to get a full image out of a VideoCapture object.
@@ -649,60 +625,60 @@ def load_images_from_folder(folder):
     return images
 
 
-def detect_block(image):
-    img_show = image.copy()
-
-    templates = load_images_from_folder("/home/team18/Frank_Ray_Zihan/Templates")
-
-    template_index = 1
-    locations = []
-    numbers = []
-
-    for template in templates:
-
-        w, h, _ = template.shape
-        # All the 6 methods for comparison in a list
-        # methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-        #             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
-
-        # #Below are the two methods that are working
-        meth = 'cv2.TM_CCOEFF_NORMED'
-        img = img_show.copy()
-        method = eval(meth)
-        # Apply template Matching
-        res = cv2.matchTemplate(img, template, method)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
-        # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
-        if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-            top_left = min_loc
-        else:
-            top_left = max_loc
-        bottom_right = (top_left[0] + w, top_left[1] + h)
-        # recognized.append([top_left, bottom_right])
-
-        if max_val >= 0.7:
-            if template_index == block_num:
-                cv2.rectangle(img_show, top_left, bottom_right, (0, 0, 255), 2)
-            else:
-                cv2.rectangle(img_show, top_left, bottom_right, (0, 255, 0), 2)
-            cv2.putText(img_show, str(template_index), (top_left[0], top_left[1]), cv2.FONT_HERSHEY_DUPLEX, 2,
-                        (0, 255, 255), 3)
-            center_x = top_left[0] + w // 2
-            center_y = top_left[1] + h // 2
-            center = (center_x, center_y)
-            print "Found Block " + str(template_index), "at " + str(center)
-            locations.append(center)
-            numbers.append(template_index)
-
-        template_index = template_index + 1
-
-    if block_num not in numbers:
-        print "Could not find the block you are asking for."
-        print "Please adjust the block so the camera could recognize the block."
-        return None, image
-    else:
-        return locations[numbers.index(block_num)], img_show
+# def detect_block(image):
+#     img_show = image.copy()
+#
+#     templates = load_images_from_folder("/home/team18/Frank_Ray_Zihan/Templates")
+#
+#     template_index = 1
+#     locations = []
+#     numbers = []
+#
+#     for template in templates:
+#
+#         w, h, _ = template.shape
+#         # All the 6 methods for comparison in a list
+#         # methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
+#         #             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
+#
+#         # #Below are the two methods that are working
+#         meth = 'cv2.TM_CCOEFF_NORMED'
+#         img = img_show.copy()
+#         method = eval(meth)
+#         # Apply template Matching
+#         res = cv2.matchTemplate(img, template, method)
+#         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+#
+#         # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+#         if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+#             top_left = min_loc
+#         else:
+#             top_left = max_loc
+#         bottom_right = (top_left[0] + w, top_left[1] + h)
+#         # recognized.append([top_left, bottom_right])
+#
+#         if max_val >= 0.7:
+#             if template_index == block_num:
+#                 cv2.rectangle(img_show, top_left, bottom_right, (0, 0, 255), 2)
+#             else:
+#                 cv2.rectangle(img_show, top_left, bottom_right, (0, 255, 0), 2)
+#             cv2.putText(img_show, str(template_index), (top_left[0], top_left[1]), cv2.FONT_HERSHEY_DUPLEX, 2,
+#                         (0, 255, 255), 3)
+#             center_x = top_left[0] + w // 2
+#             center_y = top_left[1] + h // 2
+#             center = (center_x, center_y)
+#             print "Found Block " + str(template_index), "at " + str(center)
+#             locations.append(center)
+#             numbers.append(template_index)
+#
+#         template_index = template_index + 1
+#
+#     if block_num not in numbers:
+#         print "Could not find the block you are asking for."
+#         print "Please adjust the block so the camera could recognize the block."
+#         return None, image
+#     else:
+#         return locations[numbers.index(block_num)], img_show
 
 
 # ============================================================================================

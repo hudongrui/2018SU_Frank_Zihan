@@ -5,6 +5,9 @@ import intera_interface.head_display as head
 import cv2
 import GraspingHelperClass as Gp
 import sys
+import interceptHelper as iH
+import transformations as tfs
+import numpy as np
 
 ############################################################
 # This script takes the robot to pre-grasp position,
@@ -46,8 +49,8 @@ eef_link = group.get_end_effector_link()
 
 # print limb.joint_angles()
 dQ = Gp.euler_to_quaternion(z=3.1415/2)
-print dQ
-operation_height = 0.25
+# print dQ
+operation_height = 0.443
 
 drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
                                           p_x=0.3, p_y=0.780, p_z=operation_height,
@@ -58,8 +61,34 @@ rospy.sleep(1)
 
 img = Gp.take_picture(0, 30)
 square_list = iH.square_img_to_centers_list(img)
-number_of_blocks_left = len(square_list)
-timeout += 1
+
+square_to_find = iH.find_square_closest_to_center(img, square_list)
+
+worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
+
+
+# rot_matrix = 		tfs.rotation_matrix(np.pi/2.0, (0, 0, 1))
+# rot_maxtrix_code =  tfs.rotation_matrix(-np.pi / 2.0, [0, 0, 1], [0, 0, 0]) 
+# quat1 = tfs.quaternion_from_matrix(rot_matrix)
+# quat2 = tfs.quaternion_from_matrix(rot_maxtrix_code)
+
+# print "haha"
+# drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+#                                           p_x=0.3, p_y=0.780, p_z=operation_height,
+#                                           q_x=quat1[0], q_y=quat1[1], q_z=quat1[2], q_w=quat1[3])
+
+# Gp.move_move(limb, group, drop_block_pos, 0.2)
+# rospy.sleep(1)
+
+# print "hihi"
+# drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
+#                                           p_x=0.3, p_y=0.780, p_z=operation_height,
+#                                           q_x=quat2[0], q_y=quat2[1], q_z=quat2[2], q_w=quat2[3])
+
+# Gp.move_move(limb, group, drop_block_pos, 0.2)
+# rospy.sleep(1)
+
+# print "hehe"
 
 #####################################################################################################################
 # Here is to take a picture at pre-grasping postion

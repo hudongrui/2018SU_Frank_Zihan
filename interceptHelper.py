@@ -7,6 +7,7 @@ import time
 import copy
 from skimage import io
 import sys
+import random
 import rospy
 
 ##################################################################################
@@ -104,7 +105,7 @@ def rm_line_duplicates(lines):
             m2 = (pt4[1] - pt3[1]) / (pt4[0] - pt3[0])
             b2 = round(pt3[1] - pt3[0] * m2, 10)
 
-            if abs(m1 - m2) < 0.1 and abs(b1 - b2) < 50:
+            if abs(m1 - m2) < 0.2 and abs(b1 - b2) < 50:
                 lines.remove(line_2)
 
     return lines
@@ -115,23 +116,18 @@ def extend_line(line):
     x1, y1, x2, y2 = line[0]
     length = int(math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2))
     # TODO: Adjust the following threshold to pass the lines
-    one_block_len = 65
+    one_block_len = 55
     delta_x = 0
     delta_y = 0
-    ratio = float(abs(1.8 * (one_block_len - length) / length))
+    ratio = float(abs(1.5 * (one_block_len - length) / length))
     # TODO: The non-zero constant appeared below are arbitrary defined ratio
     if 2 * one_block_len <= length <= 2.5 * one_block_len:
         # print("Two Blocks")
         ratio = float(abs(0.8 * (one_block_len - length) / length))
-    elif 0.95 * one_block_len < length < 1.05 * one_block_len:
-        delta_x = int(abs(x2 - x1) * 0.5)
-        delta_y = int(abs(y2 - y1) * 0.5)
     elif 0.8 * one_block_len < length < 1.2 * one_block_len:
-        # print("One Block")
-
-        ratio = float(abs(10 * (one_block_len - length) / length))
+        delta_x = int(abs(x2 - x1) * 0.3)
+        delta_y = int(abs(y2 - y1) * 0.3)
     elif length < 0.8 * one_block_len:
-
         ratio = float(abs((1.3 * one_block_len - length) / length))
 
     if delta_x == 0 and delta_y == 0:
@@ -185,7 +181,7 @@ def rm_nearby_intersect(intersections):
             j = 0
             for point_2 in intersections:
                 if i < j:
-                    if is_in_range_of_a_circle(point_1, point_2, radius_threshold=20):
+                    if is_in_range_of_a_circle(point_1, point_2, radius_threshold=30):
                         intersections.remove(point_2)
                 j += 1
             i += 1
@@ -424,11 +420,12 @@ def refine_range(angle, lowerLimit=None, upperLimit=None, modifier=None):
         upperLimit = 90
     if modifier is None:
         modifier = 180
-
-    if angle < lowerLimit:
-        angle += modifier
-    elif angle > upperLimit:
-        angle -= modifier
+    while angle > upperLimit or angle < lowerLimit:
+        print 'hahaha'
+        if angle < lowerLimit:
+            angle += modifier
+        elif angle > upperLimit:
+            angle -= modifier
     return angle
 
 
@@ -507,10 +504,11 @@ class Rectangle:
             correction_line = Line(self.center, min_distance_center)
         else:
             correction_line = Line(self.center, Intersect(0, 0))
+
         line1 = Line(self.point1, self.point2)
         line2 = Line(self.point1, self.point3)
-        theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi * 2)
-        theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi * 2)
+        theta1 = refine_range(line1.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
+        theta2 = refine_range(line2.getThetaInRad(), -math.pi / 2, math.pi / 2, math.pi)
         if debugMode == 3:
             if abs(theta1) > abs(theta2):
                 output = theta2
@@ -522,7 +520,7 @@ class Rectangle:
                 output = theta2
             else:
                 output = theta1
-        return output + 10 / 180 * math.pi
+        return output
 
     def drawDiagonal1(self, image):
         color = (255, 0, 255)
@@ -591,13 +589,14 @@ def square_img_to_centers_list(img, square=None):
     # cv2.waitKey()
 
     contrast = increase_contrast(closing)
-    # cv2.imshow("Increast Contrast", contrast)
+    cv2.imshow("Increast Contrast", contrast)
     # cv2.waitKey()
 
-    edges = cv2.Canny(contrast, 200, 200)
+    edges = cv2.Canny(contrast, 150, 200)
     # edges = cv2.Canny(img_filtered, 150, 200)
 
     # cv2.imshow("Canny Edges", edges)
+    # cv2.waitKey()
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=25, minLineLength=12, maxLineGap=25)
 
     unext_img = img.copy()
@@ -607,6 +606,7 @@ def square_img_to_centers_list(img, square=None):
         cv2.line(unext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
 
     # cv2.imshow("Originally detected lines", unext_img)
+    # cv2.waitKey()
 
     ext_lines = []
     ext_img = img.copy()
@@ -662,37 +662,36 @@ def square_img_to_centers_list(img, square=None):
     height, width, _ = img.shape
     blank_image = img.copy()
 
+    print("Found " + str(len(found_rect)) + " blocks in the frame")
+    if len(found_rect) == 0:
+        print("Could not find any blocks.")
+
     for point in intersections:
         cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
 
-    try:
-        rect_cnt = 0
-        for index in found_rect:
-            number_of_center += 1
-            cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
-            cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
-            rect_cnt = rect_cnt + 1
-        print("Found " + str(len(found_rect)) + " blocks in the frame")
-        if number_of_center == 0:
-            print("Could not find any blocks.")
+    rect_cnt = 0
+    for index in found_rect:
+        number_of_center += 1
+        cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+        cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
+                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+        rect_cnt = rect_cnt + 1
 
-        # for rect in found_rect:
-        #     rect.drawDiagonal1(blank_image)
-        #     rect.drawDiagonal2(blank_image)
-        #
-        # cv2.imshow("Removed Background", img_filtered)
-        # cv2.imshow("Closing", closing)
-        # cv2.imshow("Increast Contrast", contrast)
-        # cv2.imshow("Canny Edges", edges)
-        # cv2.imshow("Originally detected lines", unext_img)
-        # cv2.imshow("Extend the lines", ext_img)
-        cv2.imshow("Displaying Result", blank_image)
-        cv2.waitKey()
-        cv2.destroyAllWindows()
-        return found_rect
-    except TypeError:
-        return None
+    # for rect in found_rect:
+    #     rect.drawDiagonal1(blank_image)
+    #     rect.drawDiagonal2(blank_image)
+    #
+    # cv2.imshow("Removed Background", img_filtered)
+    # cv2.imshow("Closing", closing)
+    # cv2.imshow("Increast Contrast", contrast)
+    # cv2.imshow("Canny Edges", edges)
+    # cv2.imshow("Originally detected lines", unext_img)
+    # cv2.imshow("Displaying Result", blank_image)
+    # cv2.imshow("Extend the lines", ext_img)
+    # cv2.waitKey()
+    # cv2.waitKey(1000)
+    # cv2.destroyAllWindows()
+    return found_rect
 
 
 # def get_joint_angles(x, y, z, theta, dQ):
@@ -707,19 +706,17 @@ def get_location(list_of_coordinate, workspace):
     # Default value for workspace is false, indicating drop_off_location should be on the right
     if workspace:
         # Workspace on human's left
-        ctr_x, ctr_y, ctr_z = 0.66, -0.089, -0.165
-        ctr_x, ctr_y, ctr_z = 0.66, -0.089, 0
+        ctr_x, ctr_y, ctr_z = 0.70, -0.089, -0.07
     else:
         # Workspace on human's right
-        ctr_x, ctr_y, ctr_z = 0.66, 0.521, -0.165
-        ctr_x, ctr_y, ctr_z = 0.66, 0.521, 0
+        ctr_x, ctr_y, ctr_z = 0.70, 0.421, -0.08
 
 
     locations = []
     for loc in list_of_coordinate:
         px, py, pz = loc[0], loc[1], loc[2]
-        theta = loc[3] / 180 * np.pi
-        b_len = 0.053
+        theta = (loc[3]) / 180 * np.pi
+        b_len = 0.053 * math.sqrt(2) - 0.01 # The additional factor compensates for extended length due to possible rotation
         b_height = 0.045
         x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_height
         locations.append([x, y, z, theta])
@@ -731,16 +728,39 @@ def get_location(list_of_coordinate, workspace):
 # We construct a new coordinate system where the center drop-off location is origin,
 # with each unit length of one block length, which is 0.0045m
 def drop_destinations(workspace):
+    # Pyramid
+    preset_pyramid = [[0, -1, 0, -90], [0, 0, 0, -90], [0, 1, 0, -90], [0, -0.5, 1, -90], [0, 0.5, 1, -90], [0, 0, 2, -90]]
+    #########
+    # Below are all the 2-D presets
+    #########
     # Center of workspace
     preset_0 = [[0, 0, 0, 0]]
-
-    # Pyramid
-    preset_1 = [[0, -1, 0, -90], [0, 0, 0, -90], [0, 1, 0, -90], [0, -0.5, 1, -90], [0, 0.5, 1, -90], [0, 0, 2, -90]]
-
     # 45 degrees rotation clockwise
-    preset_2 = [[0, 0, 0, 45]]
-
+    preset_1 = [[0, 0, 0, 45]]
     # two_Blocks
-    preset_3 = [[0, 0, 0, 0], [0, 0, 2, 0]]
+    preset_3 = [[0, 0, 0, 0], [0, 2, 0, 0]]
+    ######
+    # four blocks
+    ######
+    four_block_presets = []
+    p_1 = [[0, 0, 0, 0], [1, 1, 0, 0], [-1, -1, 0, 0], [0, 1, 0, 0]]
+    p_2 = [[1, 0, 0, 30], [0, 1, 0, 20], [0, -1, 0, 45], [-1, 0, 0, -45]]
+    p_3 = [[1, 1, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [-1, -1, 0, 0]]
+    p_4 = [[0, 1, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [-1, -1, 0, 0]]
+    p_5 = [[-1, -1, 0, 0], [1, 1, 0, 0], [0, -1, 0, 0], [1, -1, 0, 0]]
+    four_block_presets.append(p_1)
+    four_block_presets.append(p_2)
+    four_block_presets.append(p_3)
+    four_block_presets.append(p_4)
+    four_block_presets.append(p_5)
 
-    return get_location(preset_3, workspace)
+    if workspace:
+        final_preset = p_2
+
+    else:
+        final_preset = p_3
+
+    i = random.randint(0, len(four_block_presets) - 1)
+    # print("Assuming four blocks in work space, using preset ", i + 1)
+
+    return get_location(preset_1, workspace)
