@@ -326,6 +326,7 @@ def pixelToWorld(u, v):
 
     # homogeneous transformation from /camera to /gripper
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0]) ## this is the key thing to check and verify
+    hom_Mtrx_c_g[0][3] = 0.1 # this is a guess number from gripper to camera
     # print hom_Mtrx_c_g
 
     ## this is just calculating the transformation matrix from base to camera
