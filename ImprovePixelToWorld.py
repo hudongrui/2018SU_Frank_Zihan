@@ -48,15 +48,15 @@ eef_link = group.get_end_effector_link()
 # Gp.load_camera_w_mount(scene)
 
 # print limb.joint_angles()
-dQ = Gp.euler_to_quaternion(z=3.1415/2)
+dQ = Gp.euler_to_quaternion(z=3.1415)
 # print dQ
 operation_height = 0.443
 
 drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=0.3, p_y=0.780, p_z=operation_height,
+                                          p_x=0.13, p_y=0.83, p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-Gp.move_move(limb, group, drop_block_pos, 0.2)
+Gp.move_move(limb, group, drop_block_pos, 0.4)
 rospy.sleep(1)
 
 img = Gp.take_picture(0, 30)
@@ -66,30 +66,10 @@ square_to_find = iH.find_square_closest_to_center(img, square_list)
 
 worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
 
-
-# rot_matrix = 		tfs.rotation_matrix(np.pi/2.0, (0, 0, 1))
-# rot_maxtrix_code =  tfs.rotation_matrix(-np.pi / 2.0, [0, 0, 1], [0, 0, 0]) 
-# quat1 = tfs.quaternion_from_matrix(rot_matrix)
-# quat2 = tfs.quaternion_from_matrix(rot_maxtrix_code)
-
-# print "haha"
-# drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-#                                           p_x=0.3, p_y=0.780, p_z=operation_height,
-#                                           q_x=quat1[0], q_y=quat1[1], q_z=quat1[2], q_w=quat1[3])
-
-# Gp.move_move(limb, group, drop_block_pos, 0.2)
-# rospy.sleep(1)
-
-# print "hihi"
-# drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-#                                           p_x=0.3, p_y=0.780, p_z=operation_height,
-#                                           q_x=quat2[0], q_y=quat2[1], q_z=quat2[2], q_w=quat2[3])
-
-# Gp.move_move(limb, group, drop_block_pos, 0.2)
-# rospy.sleep(1)
-
-# print "hehe"
-
+moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                         p_x=worldVec[0], p_y=worldVec[1], p_z=0.32,
+                                         q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+Gp.move_move(limb, group, moveJoint)
 #####################################################################################################################
 # Here is to take a picture at pre-grasping postion
 # frame = Gp.take_picture(0, 30)

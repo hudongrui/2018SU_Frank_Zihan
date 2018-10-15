@@ -325,8 +325,10 @@ def pixelToWorld(u, v):
     # print hom_Mtrx_g_b
 
     # homogeneous transformation from /camera to /gripper
+
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0]) ## this is the key thing to check and verify
-    hom_Mtrx_c_g[0][3] = 0.1 # this is a guess number from gripper to camera
+    # hom_Mtrx_c_g = transformations.rotation_matrix(0, (0, 0, 1))
+    hom_Mtrx_c_g[0][3] = in_to_m(-2.5) ## this is a guess number from gripper to camera
     # print hom_Mtrx_c_g
 
     ## this is just calculating the transformation matrix from base to camera
@@ -335,7 +337,7 @@ def pixelToWorld(u, v):
     Mtrx_c_b = hom_Mtrx_c_b[:3, :4]
     # print Mtrx_c_b
     Mtrx_c_b = np.matrix(Mtrx_c_b)
-    print Mtrx_c_b
+    # print Mtrx_c_b
 
     camMtrx = camCalib.getCamMatrx()
     # print camMtrx
@@ -345,13 +347,13 @@ def pixelToWorld(u, v):
     # print camMtrxInv
 
     pixVec = np.matrix([[z * u], [z * v], [z * 1]])  # pixel vector augmented by 1
-    print pixVec
+    # print pixVec
 
     # testVec = camMtrxInv*z*pixVec
     one = np.array([1])
     one.shape = (1, 1)
     camVec = np.concatenate((camMtrxInv * pixVec, one), axis=0)
-    print camVec
+    # print camVec
     worldVec = Mtrx_c_b * camVec
 
     return worldVec, hom_Mtrx_c_b, rot
