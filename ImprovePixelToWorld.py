@@ -48,28 +48,28 @@ eef_link = group.get_end_effector_link()
 # Gp.load_camera_w_mount(scene)
 
 # print limb.joint_angles()
-dQ = Gp.euler_to_quaternion(z=3.1415)
+dQ = Gp.euler_to_quaternion(z=0)
 # print dQ
 operation_height = 0.443
 
 drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=0.13, p_y=0.83, p_z=operation_height,
+                                          p_x=-0.13, p_y=-0.91, p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
 Gp.move_move(limb, group, drop_block_pos, 0.4)
 rospy.sleep(1)
 
-img = Gp.take_picture(0, 30)
-square_list = iH.square_img_to_centers_list(img)
+# img = Gp.take_picture(0, 30)
+# square_list = iH.square_img_to_centers_list(img)
 
-square_to_find = iH.find_square_closest_to_center(img, square_list)
+# square_to_find = iH.find_square_closest_to_center(img, square_list)
 
-worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
+# worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
 
-moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                         p_x=worldVec[0], p_y=worldVec[1], p_z=0.32,
-                                         q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
-Gp.move_move(limb, group, moveJoint)
+# moveJoint = Gp.ik_service_client(limb='right', use_advanced_options=True,
+#                                          p_x=worldVec[0], p_y=worldVec[1], p_z=0.32,
+#                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+# Gp.move_move(limb, group, moveJoint)
 #####################################################################################################################
 # Here is to take a picture at pre-grasping postion
 # frame = Gp.take_picture(0, 30)

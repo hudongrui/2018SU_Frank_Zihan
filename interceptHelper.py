@@ -325,7 +325,7 @@ def distance_between_points(point1, point2):
 
 
 def categorize_rect(intersections):
-    start_time = time.time()
+    # start_time = time.time()
     tmp_center_list = []
     list_of_squares = []
     tmp_intersection = intersections
@@ -334,7 +334,7 @@ def categorize_rect(intersections):
             if starting_point != next_point:
                 base_line = Line(starting_point, next_point)
                 standard_length = base_line.length
-                if standard_length <= 5:
+                if standard_length <= 30:
                     break
                 possible_1 = Intersect(starting_point.x - math.sin(base_line.theta) * base_line.length, starting_point.y
                                        + math.cos(base_line.theta) * base_line.length)
@@ -380,8 +380,8 @@ def categorize_rect(intersections):
         for rect in temp_list:
             rect.setIndex(index)
             index += 1
-        elapsed_time = time.time() - start_time
-        print("the time elapsed for categorizing square is " + str(elapsed_time))
+        # elapsed_time = time.time() - start_time
+        # print("the time elapsed for categorizing square is " + str(elapsed_time))
         return temp_list
     except IndexError:
         return None
@@ -560,8 +560,12 @@ def find_square_closest_to_center(img, square_list):
 # NOTE: All the commented code blocks appeared in the method below are for debugging purpose
 # Uncomment them to display intermediate outputs
 #########################################################################################
-def square_img_to_centers_list(img, square=None):
-    mask = io.imread("Background.jpg")
+def square_img_to_centers_list(img, worksapce, square=None):
+    if worksapce:
+        # Right
+        mask = io.imread("Background_Right.jpg")
+    else:
+        mask = io.imread("Background_Left.jpg")
 
     if square is not None:
         # For Second Time to Perform Recognition, crop only the center of the image to avoid picking up blocks with angle distortion
@@ -589,7 +593,7 @@ def square_img_to_centers_list(img, square=None):
     # cv2.waitKey()
 
     contrast = increase_contrast(closing)
-    cv2.imshow("Increast Contrast", contrast)
+    # cv2.imshow("Increast Contrast", contrast)
     # cv2.waitKey()
 
     edges = cv2.Canny(contrast, 150, 200)
@@ -700,16 +704,14 @@ def square_img_to_centers_list(img, square=None):
 
 # Calculate actual location in the base-centered coordinate
 def get_location(list_of_coordinate, workspace):
-    # x = 26in  y = -3.5in  z = -6.5in
-    # x = 26in  y = 20.5in  z = -6.5in
 
     # Default value for workspace is false, indicating drop_off_location should be on the right
     if workspace:
         # Workspace on human's left
-        ctr_x, ctr_y, ctr_z = 0.70, -0.089, -0.07
+        ctr_x, ctr_y, ctr_z = -0.13, -0.8, 0.1
     else:
         # Workspace on human's right
-        ctr_x, ctr_y, ctr_z = 0.70, 0.421, -0.08
+        ctr_x, ctr_y, ctr_z = 0.13, 0.7, 0.1
 
 
     locations = []
@@ -763,4 +765,4 @@ def drop_destinations(workspace):
     i = random.randint(0, len(four_block_presets) - 1)
     # print("Assuming four blocks in work space, using preset ", i + 1)
 
-    return get_location(preset_1, workspace)
+    return get_location(preset_3, workspace)

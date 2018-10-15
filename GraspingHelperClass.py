@@ -50,15 +50,20 @@ from moveit_commander.conversions import pose_to_list
 import interceptHelper as iH
 
 
-def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, q_w):
+def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, q_w, workspace=True):
     ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
     iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
     ikreq = SolvePositionIKRequest()
     hdr = Header(stamp=rospy.Time.now(), frame_id='base')
 
-    # return_joint sends robot to pre-grasp arm configuration
-    return_joint = [-1.500208984375, -1.0860322265625, -0.177197265625, 1.3819580078125, 0.0950634765625,
-                    1.3055205078125, 1.6654560546875]
+    camera_center_human_right = [1.307111328125, -0.383283203125, -0.6499521484375, 0.4143857421875, 0.593916015625, 1.6078818359375, 2.8055830078125]
+
+    camera_center_human_left = [-2.069859375, -0.5306162109375, 1.6159716796875, -0.0359453125, -1.6358544921875, 2.09780078125, -0.366337890625]
+    if workspace:
+        return_joint = camera_center_human_left
+    else:
+        return_joint = camera_center_human_right
+
 
     poses = {
         'right': PoseStamped(
@@ -367,11 +372,11 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     # 0.05 both
     # TODO
     if workspace:
-        y_offset = 0.015
-        x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
+        y_offset = 0.01
+        x_offset = 0.04 # 0m is the camera offset from the gripper center
     else:
-        y_offset = 0.010
-        x_offset = 0.065
+        y_offset = 0
+        x_offset = 0.04
     # y_offset = 0.005
     # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
     print("Beginning Grasp execute\n----------------------------------------------------------------")
@@ -407,11 +412,11 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
                                         q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
                                         q_w=quat_replace[3])
     mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.15,
                                         q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
                                         q_w=quat_replace[3])
     down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-                                         p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=-0.08,
+                                         p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
                                          q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
                                          q_w=quat_replace[3])
 
