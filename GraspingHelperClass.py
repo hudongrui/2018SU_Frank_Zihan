@@ -178,30 +178,42 @@ def load_objects(scene, planning_frame):
     scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    x = 0.3
+    x = 3
     y = 300
     z = 300
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-19) + in_to_m(x / 2)
+    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
     box_pose.pose.position.y = in_to_m(-150) + in_to_m(y / 2)
     box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
     box_name = "wall"
     scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
-    rospy.sleep(1)
 
-    # frontal table dimensions: x -- 42' y -- 48' z -- 37'
     rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
     x = 9 # inches
     y = 20 # inches
     z = 300 # inches
     box_pose = PoseStamped()
     box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
+    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2) + in_to_m(2) # the added value is for safety
     box_pose.pose.position.y = in_to_m(48) + in_to_m(-y / 2)
     box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
     box_name = "pillar"
     scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+
+    # rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+    # x = 11
+    # y = 40
+    # z = 41
+    # box_pose = PoseStamped()
+    # box_pose.header.frame_id = planning_frame  # must put it in the frame
+    # box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2) + in_to_m(2) # the added value is for safety
+    # box_pose.pose.position.y = in_to_m(-20) + in_to_m(y / 2)
+    # box_pose.pose.position.z = in_to_m(30) + in_to_m(z / 2)
+    # box_name = "visually safe"
+    # scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+
+
     rospy.sleep(1)
 
 
@@ -232,6 +244,8 @@ def remove_objects(scene):
     rospy.sleep(1)
     scene.remove_world_object("left table")
     rospy.sleep(1)
+    # scene.remove_world_object("visually safe")
+    # rospy.sleep(1)
 
 
 def remove_camera_w_mount(scene):
@@ -260,6 +274,7 @@ def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=N
     waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
     for point in step:
         waypoint.set_joint_angles(joint_angles=point)
+        # print point
     traj.append_waypoint(waypoint.to_msg())
     traj.send_trajectory(timeout=timeout)
     group.stop()
@@ -372,18 +387,18 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     # 0.05 both
     # TODO
     if workspace:
-        y_offset = 0.01
-        x_offset = 0.04 # 0m is the camera offset from the gripper center
+        y_offset = 0.01 - 0.003
+        x_offset = 0.045 # 0m is the camera offset from the gripper center
     else:
-        y_offset = 0
-        x_offset = 0.04
+        y_offset = 0.004 + 0.002
+        x_offset = 0.05 - 0.004
     # y_offset = 0.005
     # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
     print("Beginning Grasp execute\n----------------------------------------------------------------")
     [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
-    print('endEffPos, x: ', endEffPos[0])
-    print('endEffPos, y: ', endEffPos[1])
-    print('endEffPos, z: ', endEffPos[2])
+    # print('endEffPos, x: ', endEffPos[0])
+    # print('endEffPos, y: ', endEffPos[1])
+    # print('endEffPos, z: ', endEffPos[2])
     hom_rotGrasp = transformations.rotation_matrix(Ang, (0, 0, 1))
     hom_rotGrasp1 = np.dot(hom_Mtrx_c_b, hom_rotGrasp)
     # hom_rotGrasp1[0][3] = 0
@@ -401,7 +416,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
 
     angles = limb.joint_angles()
     endEffAng = angles['right_j6'] # currently 128 degree
-    print 'Current Joint 6 Angle in World Frame is: ', endEffAng * 180.0 / np.pi
+    # print 'Current Joint 6 Angle in World Frame is: ', endEffAng * 180.0 / np.pi
     targetAng = endEffAng + Ang
 
     x_target = (endEffPos[0] + x_ref) * 0.5
@@ -419,19 +434,6 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
                                          p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
                                          q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
                                          q_w=quat_replace[3])
-
-    # top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-    #                                     p_x=x_target+0.01, p_y=y_target+0.01, p_z=0.5,  # q_x=0, q_y=0, q_z=0, q_w=0)
-    #                                     q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2], q_w=quat_replace[3])
-    #
-    # mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-    #                                     p_x=x_target+0.01, p_y=y_target+0.01, p_z=0.3,  # q_x=0, q_y=0, q_z=0, q_w=0)
-    #                                     q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2], q_w=quat_replace[3])
-    #
-    # down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
-    #                                      p_x=x_target+0.01, p_y=y_target+0.01, p_z=0.1,
-    #                                      q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2], q_w=quat_replace[3])
-
     lstTop = list(top_grasp_joint)
     lstMid = list(mid_grasp_joint)
     lstDown = list(down_grasp_joint)
@@ -449,9 +451,30 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
     print("Completing grasp execute\n------------------------------------------------------")
-
-
 # ======================================================================================
+
+
+def dropExecute(limb, gripper, drop_off_location, dQ, group, operation_height, temp_workspace):
+    Qua = euler_to_quaternion(z=drop_off_location[3])
+    x = drop_off_location[0]
+    y = drop_off_location[1]
+    z = drop_off_location[2]
+    top_drop_position = ik_service_client(limb='right', use_advanced_options=True,
+                                              p_x=x, p_y=y, p_z=operation_height,
+                                              q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3],workspace=temp_workspace)
+    mid_drop_position = ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=x, p_y=y, p_z=operation_height + z - 0.2,
+                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3],workspace=temp_workspace)
+    down_drop_position = ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=x, p_y=y, p_z=z,
+                                          q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
+    move_move(limb, group, top_drop_position)
+    move_move(limb, group, mid_drop_position)
+    move_move(limb, group, down_drop_position)
+    gripper.open()
+    move_move(limb, group, mid_drop_position)
+    move_move(limb, group, top_drop_position)
+
 
 
 # ======================================================================================

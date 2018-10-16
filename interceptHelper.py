@@ -708,10 +708,10 @@ def get_location(list_of_coordinate, workspace):
     # Default value for workspace is false, indicating drop_off_location should be on the right
     if workspace:
         # Workspace on human's left
-        ctr_x, ctr_y, ctr_z = -0.13, -0.8, 0.1
+        ctr_x, ctr_y, ctr_z = -0.13, -0.55, 0.1
     else:
         # Workspace on human's right
-        ctr_x, ctr_y, ctr_z = 0.13, 0.7, 0.1
+        ctr_x, ctr_y, ctr_z = 0.13, 0.55, 0.1
 
 
     locations = []

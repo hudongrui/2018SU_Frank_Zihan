@@ -25,7 +25,7 @@ headDisplay = head.HeadDisplay()
 rospy.sleep(1)
 
 # print limb.joint_angles()
-dQ = Gp.euler_to_quaternion(z=3.1415)
+dQ = Gp.euler_to_quaternion(z=2*3.14159)
 # print dQ
 operation_height = 0.443
 
@@ -55,8 +55,8 @@ display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path
 planning_frame = group.get_planning_frame()
 
 eef_link = group.get_end_effector_link()
-# Gp.load_objects(scene, planning_frame)
-# Gp.load_camera_w_mount(scene)E
+Gp.load_objects(scene, planning_frame)
+Gp.load_camera_w_mount(scene)
 
 pre_grasp_pos = camera_center_human_right
 Gp.move_move(limb, group, pre_grasp_pos, 0.3)

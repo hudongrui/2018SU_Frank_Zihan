@@ -33,13 +33,15 @@ operation_height = 0.443
 
 # x = 5 inch = 0.13m y = 33 inch = 0.83m
 camera_center_human_right = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=0.13, p_y=0.7, p_z=operation_height,
+                                          p_x=0.13, p_y=0.55, p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+# camera_center_human_right = [0.7406572265625, -0.67773046875, 1.38037890625, 0.7668037109375, -0.9584423828125, 1.9225859375, -2.98408203125]
 
 # x = -5 inch = -0.13m y = -36 inch = -0.91
 camera_center_human_left = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=-0.13, p_y=-0.8, p_z=operation_height,
+                                          p_x=-0.13, p_y=-0.55, p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+# camera_center_human_left = [-2.122291015625, -0.5280498046875, 1.63117578125, 0.0682919921875, -1.590201171875, 2.102138671875, -0.297224609375]
 # this is the our desired Quaternion matrix
 safe_move_r2l = [-0.504587890625, -1.9217080078125, 0.319630859375, 0.933556640625, 0.12821875, 2.55040625,
                  -1.351919921875]
@@ -81,7 +83,7 @@ number_of_blocks_left = 0
 block_index = 0
 
 # false indicates pickup location is on the left and true is right
-temp_workspace = False
+temp_workspace = True
 iterations = 2  # how many times does the robot have to repeatedly grab the blocks
 if debugMode == 0:
     Gp.move_move(limb, group, safe_move_r2l)
@@ -144,22 +146,11 @@ while iterations != 0:
         Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1, group, temp_workspace)
         Gp.move_move(limb, group, moveJoint)
 
-        Qua = Gp.euler_to_quaternion(z=drop_off_location[3])
-        pre_drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                                  p_x=drop_off_location[0], p_y=drop_off_location[1], p_z=operation_height,
-                                                  q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
-        drop_block_pos = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                              p_x=drop_off_location[0], p_y=drop_off_location[1], p_z=drop_off_location[2],
-                                              q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
-        Gp.move_move(limb, group, pre_drop_block_pos)
-        Gp.move_move(limb, group, drop_block_pos)
+        Gp.dropExecute(limb,gripper,drop_off_location, dQ, group, operation_height, temp_workspace)
 
         block = square_list[0]
         block.setIndex(block_index)
         block.setLocation(drop_off_location, dQ)
-        gripper.open()
-        Gp.move_move(limb, group, pre_drop_block_pos)
-
         # While loop stuff
         moved_times += 1
         block_index += 1
