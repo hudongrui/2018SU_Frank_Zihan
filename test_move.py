@@ -59,5 +59,5 @@ Gp.load_objects(scene, planning_frame)
 Gp.load_camera_w_mount(scene)
 
 pre_grasp_pos = camera_center_human_right
-Gp.move_move(limb, group, pre_grasp_pos, 0.3)
+Gp.move_move(limb, group, pre_grasp_pos)
 rospy.sleep(1)
