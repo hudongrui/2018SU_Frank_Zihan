@@ -9,6 +9,7 @@ from skimage import io
 import sys
 import random
 import rospy
+import GraspingHelperClass as Gp
 
 ##################################################################################
 # debugMode helper
@@ -706,19 +707,25 @@ def square_img_to_centers_list(img, worksapce, square=None):
 def get_location(list_of_coordinate, workspace):
 
     # Default value for workspace is false, indicating drop_off_location should be on the right
+##################################################################################
+#
+# TODO: IMPORTANT!!!!! Below are the positions for the temporary setup to address robot unable to avoid collision
+#
+##################################################################################
+    # 36 inch, 18 inch
     if workspace:
         # Workspace on human's left
-        ctr_x, ctr_y, ctr_z = -0.13, -0.55, 0.1
+        ctr_x, ctr_y, ctr_z = Gp.in_to_m(25 + 3.2), Gp.in_to_m(19), 0.1
     else:
         # Workspace on human's right
-        ctr_x, ctr_y, ctr_z = 0.13, 0.55, 0.1
+        ctr_x, ctr_y, ctr_z = Gp.in_to_m(25 + 3.2), Gp.in_to_m(-19), 0.1
 
 
     locations = []
     for loc in list_of_coordinate:
         px, py, pz = loc[0], loc[1], loc[2]
         theta = (loc[3]) / 180 * np.pi
-        b_len = 0.053 * math.sqrt(2) - 0.01 # The additional factor compensates for extended length due to possible rotation
+        b_len = 0.053 * math.sqrt(2) + 0.01 # The additional factor compensates for extended length due to possible rotation
         b_height = 0.045
         x, y, z = ctr_x + px * b_len, ctr_y + py * b_len, ctr_z + pz * b_height
         locations.append([x, y, z, theta])
@@ -740,21 +747,23 @@ def drop_destinations(workspace):
     # 45 degrees rotation clockwise
     preset_1 = [[0, 0, 0, 45]]
     # two_Blocks
-    preset_3 = [[0, 0, 0, 0], [0, 2, 0, 0]]
+    preset_3 = [[0, 0, 0, 30], [0, 2, 0, 0]]
     ######
     # four blocks
     ######
     four_block_presets = []
-    p_1 = [[0, 0, 0, 0], [1, 1, 0, 0], [-1, -1, 0, 0], [0, 1, 0, 0]]
+    p_1 = [[0, 0, 0, 0], [1, 1, 0, 10], [-1, -1, 0, 0], [0, 1, 0, 25]]
     p_2 = [[1, 0, 0, 30], [0, 1, 0, 20], [0, -1, 0, 45], [-1, 0, 0, -45]]
     p_3 = [[1, 1, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [-1, -1, 0, 0]]
-    p_4 = [[0, 1, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [-1, -1, 0, 0]]
-    p_5 = [[-1, -1, 0, 0], [1, 1, 0, 0], [0, -1, 0, 0], [1, -1, 0, 0]]
+    p_4 = [[0, 1, 0, 50], [0, 0, 0, 0], [1, 0, 0, 0], [-1, -1, 0, 0]]
+    p_5 = [[-1, -1, 0, 0], [1, 1, 0, 0], [0, -1, 0, 60], [1, -1, 0, 80]]
+    p_6 = [[0, 1, 0, 30], [1, -1, 0, 0], [1, 0, 0, -30], [0, 0, 0, 20]]
     four_block_presets.append(p_1)
     four_block_presets.append(p_2)
     four_block_presets.append(p_3)
     four_block_presets.append(p_4)
     four_block_presets.append(p_5)
+    four_block_presets.append(p_6)
 
     if workspace:
         final_preset = p_2
@@ -763,6 +772,145 @@ def drop_destinations(workspace):
         final_preset = p_3
 
     i = random.randint(0, len(four_block_presets) - 1)
-    # print("Assuming four blocks in work space, using preset ", i + 1)
+    print "Assuming four blocks in work space, using preset " + str(i + 1)
+    return get_location(four_block_presets[i], workspace)
 
-    return get_location(preset_3, workspace)
+
+# This the function for finding the marked area for drop off 
+def get_marked_location(img, workspace):
+
+    if worksapce:
+        # Right
+        mask = io.imread("Background_Right.jpg")
+    else:
+        mask = io.imread("Background_Left.jpg")
+
+    if square is not None:
+        # For Second Time to Perform Recognition, crop only the center of the image to avoid picking up blocks with angle distortion
+        ctr_x = square.getCenterX()
+        ctr_y = square.getCenterY()
+        dim = int(2 * square.side_length)
+
+        x = int(ctr_x - 0.5 * dim)
+        y = int(ctr_y - 0.5 * dim)
+        l = dim
+        img = img[y: y + l, x:x + l]
+        mask = mask[y: y + l, x:x + l]
+
+    img_filtered = cv2.subtract(mask, img)
+
+    img_filtered = rm_shadow(img_filtered)
+
+    # cv2.imshow("Removed Background", img_filtered)
+    # cv2.imshow("Mask Image", mask)
+    # cv2.waitKey()
+
+    kernel = np.ones((5, 5), np.uint8)
+    closing = cv2.morphologyEx(img_filtered, cv2.MORPH_CLOSE, kernel)
+    # cv2.imshow("Closing", closing)
+    # cv2.waitKey()
+
+    contrast = increase_contrast(closing)
+    # cv2.imshow("Increast Contrast", contrast)
+    # cv2.waitKey()
+
+    edges = cv2.Canny(contrast, 150, 200)
+    # edges = cv2.Canny(img_filtered, 150, 200)
+
+    # cv2.imshow("Canny Edges", edges)
+    # cv2.waitKey()
+    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=25, minLineLength=12, maxLineGap=25)
+
+    unext_img = img.copy()
+
+    for new_line in lines:
+        # Draw Lines after extension
+        cv2.line(unext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
+
+    # cv2.imshow("Originally detected lines", unext_img)
+    # cv2.waitKey()
+
+    ext_lines = []
+    ext_img = img.copy()
+
+    line_cnt = 0
+
+    for line in lines.copy():
+        new_line = extend_line(line)
+        ext_lines.append(new_line)
+
+        # Draw Lines after extension
+        cv2.line(ext_img, (new_line[0][0], new_line[0][1]), (new_line[0][2], new_line[0][3]), (0, 0, 255), 1)
+
+        c_x = int((new_line[0][0] + new_line[0][2]) / 2)
+        c_y = int((new_line[0][1] + new_line[0][3]) / 2)
+
+        # cv2.putText(ext_img, str(line_cnt), (c_x,c_y), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
+        line_cnt += 1
+    # Optional: Remove Duplicate Lines for Robustness
+    # ext_lines = iH.rm_line_duplicates(ext_lines)
+    # cv2.imshow("Extend the lines", ext_img)
+
+    intersections = []
+    i = 0
+    for line_1 in ext_lines:
+        j = 0
+        for line_2 in ext_lines:
+            if i < j:
+                x_center, y_center, theta, found = check_intersect(line_1[0], line_2[0])
+                if found:
+                    new_point = Intersect(x_center, y_center, theta=theta)
+                    intersections.append(new_point)
+            j += 1
+        i += 1
+
+    # x, y, theta, bol = iH.check_intersect(ext_lines[3][0], ext_lines[6][0])
+    #
+    # if bol:
+    #     print("Found intersection at (" + str(x) + ", " + str(y) + ")")
+
+    intersections = rm_nearby_intersect(intersections)
+    found_rect = categorize_rect(intersections)
+    # print("Found " + str(len(found_rect)) + "Rectangle")
+
+    found_rect = rm_duplicates(found_rect)
+    found_rect = rm_close_to_intersects(found_rect, intersections)
+
+    # Remove intersections that are formed by two adjacent blocks located roughly one block away
+    found_rect = rm_false_positive(found_rect, contrast)
+
+    # Display Results
+    number_of_center = 0
+    height, width, _ = img.shape
+    blank_image = img.copy()
+
+    print("Found " + str(len(found_rect)) + " blocks in the frame")
+    if len(found_rect) == 0:
+        print("Could not find any blocks.")
+
+    for point in intersections:
+        cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
+
+    rect_cnt = 0
+    for index in found_rect:
+        number_of_center += 1
+        cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+        cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
+                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+        rect_cnt = rect_cnt + 1
+
+    # for rect in found_rect:
+    #     rect.drawDiagonal1(blank_image)
+    #     rect.drawDiagonal2(blank_image)
+    #
+    # cv2.imshow("Removed Background", img_filtered)
+    # cv2.imshow("Closing", closing)
+    # cv2.imshow("Increast Contrast", contrast)
+    # cv2.imshow("Canny Edges", edges)
+    # cv2.imshow("Originally detected lines", unext_img)
+    # cv2.imshow("Displaying Result", blank_image)
+    # cv2.imshow("Extend the lines", ext_img)
+    # cv2.waitKey()
+    # cv2.waitKey(1000)
+    # cv2.destroyAllWindows()
+    return found_rect

@@ -6,6 +6,10 @@ import numpy as np
 import camera_calib_BMW as camCalib
 import transformations
 import os
+import intera_interface
+import sys
+import matplotlib.pyplot as plt
+from scipy import integrate
 from geometry_msgs.msg import (
     PoseStamped,
     Pose,
@@ -17,6 +21,10 @@ from std_msgs.msg import (
     Header,
     Float64MultiArray,
     Float64
+)
+
+from intera_core_msgs.msg import (
+    JointCommand
 )
 
 from intera_core_msgs.srv import (
@@ -48,6 +56,13 @@ from math import pi
 from moveit_commander.conversions import pose_to_list
 from moveit_commander.conversions import pose_to_list
 import interceptHelper as iH
+import toppra as ta
+import toppra.constraint as constraint
+import toppra.algorithm as algo
+import time
+girigiri_aiiiiii = False
+debugMode = 1
+demo = True
 
 
 def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, q_w, workspace=True):
@@ -56,31 +71,35 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
     ikreq = SolvePositionIKRequest()
     hdr = Header(stamp=rospy.Time.now(), frame_id='base')
 
-    camera_center_human_right = [1.307111328125, -0.383283203125, -0.6499521484375, 0.4143857421875, 0.593916015625, 1.6078818359375, 2.8055830078125]
+    # camera_center_human_right = [0.72934375, -0.0131015625, -2.2375146484375, 0.507642578125, 2.1652548828125, 1.8803798828125, -1.083087890625]
 
-    camera_center_human_left = [-2.069859375, -0.5306162109375, 1.6159716796875, -0.0359453125, -1.6358544921875, 2.09780078125, -0.366337890625]
-    if workspace:
-        return_joint = camera_center_human_left
-    else:
-        return_joint = camera_center_human_right
+    # camera_center_human_left = [0.7083759765625, -0.0957626953125, -1.681681640625, 0.980623046875, 1.55379296875, 1.706056640625, 1.4645380859375]
 
+    # inter_position_for_demo = [0.2603701171875, -0.628283203125, -1.1051025390625, 1.3576220703125, 0.83878515625, 1.326048828125, 0.892400390625]
+
+    # if workspace:
+    #     return_joint = camera_center_human_right
+    # else:
+    #     return_joint = camera_center_human_left
+    # if demo:
+    #     return_joint = inter_position_for_demo
+    print type(limb)
+    return_joint = intera_interface.Limb(limb).joint_ordered_angles()
 
     poses = {
         'right': PoseStamped(
             header=hdr,
             pose=Pose(
                 position=Point(
-                    x=p_x,  # pre-grasp:  0.5609462822565073
-                    y=p_y,  # -0.3446309287328617
+                    x=p_x,
+                    y=p_y,
                     z=p_z,
-                    # 0.45777571205785983[-1.500208984375, -1.0860322265625, -0.177197265625,
-                    # 1.3819580078125, 0.0950634765625, 1.3055205078125, 1.6654560546875]
                 ),
                 orientation=Quaternion(
-                    x=q_x,  # 0.20778492941475438
-                    y=q_y,  # 0.9778261053583365
-                    z=q_z,  # -0.010705090881921715
-                    w=q_w,  # -0.023810330049445317
+                    x=q_x, 
+                    y=q_y,
+                    z=q_z,
+                    w=q_w,
                 ),
             ),
         ),
@@ -97,31 +116,27 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
         rospy.logerr("Service call failed: %s" % (e,))
         return return_joint
 
+    attempts = 0
     # Check if result valid, and type of seed ultimately used to get solution
-    if resp.result_type[0] > 0:
-        seed_str = {
-            ikreq.SEED_USER: 'User Provided Seed',
-            ikreq.SEED_CURRENT: 'Current Joint Angles',
-            ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
-        }.get(resp.result_type[0], 'None')
-        rospy.loginfo("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
-                      (seed_str,))
-        # print("------------------")
+    while attempts <= 5:
+        if resp.result_type[0] > 0:
+            seed_str = {
+                ikreq.SEED_USER: 'User Provided Seed',
+                ikreq.SEED_CURRENT: 'Current Joint Angles',
+                ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
+            }.get(resp.result_type[0], 'None')
+            rospy.loginfo("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
+                          (seed_str,))
+            return_joint = resp.joints[0].position
+            attempts = 5
+        else:
+            if attempts == 5:
+                rospy.logerr("Max Attempts reached - Maintain current position")
+            elif attempts == 1:
+                rospy.logwarn("INVALID POSE - No Valid Joint Solution Found. Recalcuating...")
+        attempts += 1
 
-        # print('J0: ', resp.joints[0].position[0])
-        # print('J1: ', resp.joints[0].position[1])
-        # print('J2: ', resp.joints[0].position[2])
-        # print('J3: ', resp.joints[0].position[3])
-        # print('J4: ', resp.joints[0].position[4])
-        # print('J5: ', resp.joints[0].position[5])
-        # print('J6: ', resp.joints[0].position[6])
-
-        # move(resp.joints[0].position)
-        return_joint = resp.joints[0].position
-        return return_joint
-    else:
-        rospy.loginfo("INVALID POSE - No Valid Joint Solution Found.")
-        return return_joint
+    return return_joint
 
 
 def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=None):
@@ -152,69 +167,81 @@ def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=Non
 def load_objects(scene, planning_frame):
     # Loading environment objects including left table, frontal desk, wall, and etc.
     rospy.loginfo("Loading environment objects ...")
+    if debugMode == 1:
+        rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+        box_pose = PoseStamped()
+        x = 30
+        y = 72
+        z = 34
+        box_pose.header.frame_id = planning_frame  # must put it in the frame
+        box_pose.pose.position.x = in_to_m(42 - x) + in_to_m(x / 2)
+        box_pose.pose.position.y = in_to_m(-36) + in_to_m(y / 2)
+        box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
+        box_name = "front table"
+        scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+    else:
+        rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+        box_pose = PoseStamped()
+        x = 72
+        y = 30
+        z = 34
+        box_pose.header.frame_id = planning_frame  # must put it in the frame
+        box_pose.pose.position.x = in_to_m(-15) + in_to_m(x / 2)
+        box_pose.pose.position.y = in_to_m(18) + in_to_m(y / 2)
+        box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
+        box_name = "right table"
+        scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
-    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    box_pose = PoseStamped()
-    x = 72
-    y = 30
-    z = 34
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-15) + in_to_m(x / 2)
-    box_pose.pose.position.y = in_to_m(18) + in_to_m(y / 2)
-    box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
-    box_name = "right table"
-    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+        rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+        box_pose = PoseStamped()
+        x = 30
+        y = 72
+        z = 34
+        box_pose.header.frame_id = planning_frame  # must put it in the frame
+        box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
+        box_pose.pose.position.y = in_to_m(-92) + in_to_m(y / 2)
+        box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
+        box_name = "left table"
+        scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
-    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    box_pose = PoseStamped()
-    x = 30
-    y = 72
-    z = 34
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
-    box_pose.pose.position.y = in_to_m(-92) + in_to_m(y / 2)
-    box_pose.pose.position.z = in_to_m(-36) + in_to_m(z / 2)
-    box_name = "left table"
-    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+        rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+        x = 3
+        y = 300
+        z = 300
+        box_pose = PoseStamped()
+        box_pose.header.frame_id = planning_frame  # must put it in the frame
+        box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
+        box_pose.pose.position.y = in_to_m(-150) + in_to_m(y / 2)
+        box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
+        box_name = "wall"
+        scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
-    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    x = 3
-    y = 300
-    z = 300
-    box_pose = PoseStamped()
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2)
-    box_pose.pose.position.y = in_to_m(-150) + in_to_m(y / 2)
-    box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
-    box_name = "wall"
-    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+        rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+        x = 9 # inches
+        y = 20 # inches
+        z = 300 # inches
+        box_pose = PoseStamped()
+        box_pose.header.frame_id = planning_frame  # must put it in the frame
+        box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2) + in_to_m(2) # the added value is for safety
+        box_pose.pose.position.y = in_to_m(48) + in_to_m(-y / 2)
+        box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
+        box_name = "pillar"
+        scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
-    rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    x = 9 # inches
-    y = 20 # inches
-    z = 300 # inches
-    box_pose = PoseStamped()
-    box_pose.header.frame_id = planning_frame  # must put it in the frame
-    box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2) + in_to_m(2) # the added value is for safety
-    box_pose.pose.position.y = in_to_m(48) + in_to_m(-y / 2)
-    box_pose.pose.position.z = in_to_m(-150) + in_to_m(z / 2)
-    box_name = "pillar"
-    scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
-
-    # rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
-    # x = 11
-    # y = 40
-    # z = 41
-    # box_pose = PoseStamped()
-    # box_pose.header.frame_id = planning_frame  # must put it in the frame
-    # box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2) + in_to_m(2) # the added value is for safety
-    # box_pose.pose.position.y = in_to_m(-20) + in_to_m(y / 2)
-    # box_pose.pose.position.z = in_to_m(30) + in_to_m(z / 2)
-    # box_name = "visually safe"
-    # scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
+        # rospy.sleep(1)  # this is a must otherwise the node will skip placing the box
+        # x = 11
+        # y = 40
+        # z = 41
+        # box_pose = PoseStamped()
+        # box_pose.header.frame_id = planning_frame  # must put it in the frame
+        # box_pose.pose.position.x = in_to_m(-23) + in_to_m(x / 2) + in_to_m(2) # the added value is for safety
+        # box_pose.pose.position.y = in_to_m(-20) + in_to_m(y / 2)
+        # box_pose.pose.position.z = in_to_m(30) + in_to_m(z / 2)
+        # box_name = "visually safe"
+        # scene.add_box(box_name, box_pose, (in_to_m(x), in_to_m(y), in_to_m(z)))
 
 
-    rospy.sleep(1)
+        rospy.sleep(1)
 
 
 def in_to_m(inch):
@@ -236,14 +263,18 @@ def load_camera_w_mount(scene):
 def remove_objects(scene):
     rospy.loginfo("Removing obstacles")
     rospy.sleep(1)
-    scene.remove_world_object("right table")
-    rospy.sleep(1)
-    scene.remove_world_object("wall")
-    rospy.sleep(1)
-    scene.remove_world_object("pillar")
-    rospy.sleep(1)
-    scene.remove_world_object("left table")
-    rospy.sleep(1)
+    if debugMode == 1:
+        scene.remove_world_object('front table')
+        rospy.sleep(1)
+    else:
+        scene.remove_world_object("right table")
+        rospy.sleep(1)
+        scene.remove_world_object("wall")
+        rospy.sleep(1)
+        scene.remove_world_object("pillar")
+        rospy.sleep(1)
+        scene.remove_world_object("left table")
+        rospy.sleep(1)
     # scene.remove_world_object("visually safe")
     # rospy.sleep(1)
 
@@ -258,27 +289,105 @@ def remove_camera_w_mount(scene):
     rospy.sleep(1)
 
 
-def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
+def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    rospy.loginfo("Initializing Motion")
     if speed_ratio is None:
-        speed_ratio = 0.3
-    if accel_ratio is None:
-        accel_ratio = 0.1
-    plan = group.plan(target)
+        speed_ratio = 0.7  # this is recommended speed
+    group.set_max_velocity_scaling_factor(speed_ratio)
+    plan = group.plan(positions)
+    group.execute(plan, wait=True)
     rospy.sleep(1)
-    step = []
-    for point in plan.joint_trajectory.points:
-        step.append(point.positions)
-    traj = MotionTrajectory(limb=limb)
-    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
-                                     max_joint_accel=accel_ratio)
-    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
-    for point in step:
-        waypoint.set_joint_angles(joint_angles=point)
-        # print point
-    traj.append_waypoint(waypoint.to_msg())
-    traj.send_trajectory(timeout=timeout)
     group.stop()
     group.clear_pose_targets()
+
+
+def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
+    trajectory_publisher = rospy.Publisher('/robot/limb/right/joint_command', JointCommand, queue_size = 1)
+    JointCommandMessage = JointCommand()
+    JointCommandMessage.mode = 4
+    if speed_ratio is None:
+        speed_ratio = 0.3
+        if girigiri_aiiiiii:
+            speed_ratio = 0.8
+    if accel_ratio is None:
+        accel_ratio = 0.1
+        if girigiri_aiiiiii:
+            accel_ratio = 0.2
+    plan = group.plan(target)
+    rospy.sleep(1)
+    JointCommandMessage.names = plan.joint_trajectory.joint_names
+
+    start_time = rospy.get_time()
+    position_array = []
+    velocity_array = []
+    acceleration_array = []
+    time_array = []
+    for point in plan.joint_trajectory.points:
+        position = point.positions
+        velocity = point.velocities
+        acceleration = point.accelerations
+        position_array.append(position)
+        velocity_array.append(velocity)
+        acceleration_array.append(acceleration)
+        desire_time = point.time_from_start.to_sec()
+        time_array.append(desire_time)
+    s_array = time_array
+    wp_array = position_array
+    path = ta.SplineInterpolator(s_array, wp_array)
+    s_sampled = np.linspace(0, time_array[len(time_array) - 1], 100)
+    q_sampled = path.eval(s_sampled)
+    # --------------------------- plotting the interpolator --------------------------
+    # plt.plot(s_sampled, q_sampled)
+    # plt.hold(True)
+    # plt.plot(time_array, position_array, 'kd')
+    # plt.legend(["joint_1","joint_2","joint_3","joint_4","joint_5","joint_6","joint_7"])
+    # plt.show()
+    # ---------------------------- end of plotting ----------------------------------
+    # Create velocity bounds, then velocity constraint object
+    dof = 7
+    vlim_ = np.ones(dof) * 5 #* speed_ratio
+    vlim = np.vstack((-vlim_, vlim_)).T
+    # Create acceleration bounds, then acceleration constraint object
+    alim_ = np.ones(dof) * 1 * accel_ratio
+    alim = np.vstack((-alim_, alim_)).T
+    pc_vel = constraint.JointVelocityConstraint(vlim)
+    pc_acc = constraint.JointAccelerationConstraint(
+    alim, discretization_scheme=constraint.DiscretizationType.Interpolation)
+
+    # Setup a parametrization instance
+    instance = algo.TOPPRA([pc_vel, pc_acc], path, solver_wrapper='seidel')
+
+    # Retime the trajectory, only this step is necessary.
+    t0 = time.time()
+    jnt_traj, aux_traj = instance.compute_trajectory(0, 0)
+    print("Parameterization time: {:} secs".format(time.time() - t0))
+    ts_sample = np.linspace(0, jnt_traj.get_duration(), 100000)
+    position_output = jnt_traj.eval(ts_sample)
+    velocity_output = jnt_traj.evald(ts_sample)
+    acceleration_output = jnt_traj.evaldd(ts_sample)
+
+    # --------------------------- plotting the algorithm output ---------------------------
+    # plt.subplot(3,1,1)
+    # plt.plot(ts_sample, position_output)
+    # plt.subplot(3,1,2)
+    # plt.plot(ts_sample, velocity_output)
+    # plt.subplot(3,1,3)
+    # plt.plot(ts_sample, acceleration_output)
+    # plt.show()
+    # --------------------------- end plot the algorithm output ---------------------------
+
+    start_time = rospy.get_time()
+    for i in range(len(ts_sample) - 1):
+        JointCommandMessage.position = position_output[i]
+        JointCommandMessage.velocity = velocity_output[i]
+        JointCommandMessage.acceleration = acceleration_output[i]
+        desire_time = ts_sample[i + 1]
+        while (rospy.get_time() - start_time) < desire_time:
+            trajectory_publisher.publish(JointCommandMessage)
+    JointCommandMessage.position = position_output[-1]
+    JointCommandMessage.velocity = velocity_output[-1]
+    JointCommandMessage.acceleration = acceleration_output[-1]
+    trajectory_publisher.publish(JointCommandMessage)
 
 
 def check_if_attached(scene, box_name, box_is_attached, box_is_known):
@@ -387,11 +496,11 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     # 0.05 both
     # TODO
     if workspace:
-        y_offset = 0.01 - 0.003
-        x_offset = 0.045 # 0m is the camera offset from the gripper center
+        y_offset = 0.017
+        x_offset = 0.025 + 0.004 # 0m is the camera offset from the gripper center
     else:
-        y_offset = 0.004 + 0.002
-        x_offset = 0.05 - 0.004
+        y_offset = 0 + 0.015 + 0.008
+        x_offset = in_to_m(1.8) - 0.02
     # y_offset = 0.005
     # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
     print("Beginning Grasp execute\n----------------------------------------------------------------")
@@ -447,6 +556,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     move_move(limb, group, down_grasp_joint, speed_ratio=0.2)
     rospy.sleep(1)
     gripper.close()
+    # exit()
     move_move(limb, group, top_grasp_joint, speed_ratio=0.2)
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
@@ -470,7 +580,7 @@ def dropExecute(limb, gripper, drop_off_location, dQ, group, operation_height, t
                                           q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
     move_move(limb, group, top_drop_position)
     move_move(limb, group, mid_drop_position)
-    move_move(limb, group, down_drop_position)
+    move_move(limb, group, down_drop_position, speed_ratio=0.2)
     gripper.open()
     move_move(limb, group, mid_drop_position)
     move_move(limb, group, top_drop_position)
