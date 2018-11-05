@@ -1,3 +1,4 @@
+
 import rospy
 import math
 import cv2
@@ -341,14 +342,16 @@ def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=N
     # plt.hold(True)
     # plt.plot(time_array, position_array, 'kd')
     # plt.legend(["joint_1","joint_2","joint_3","joint_4","joint_5","joint_6","joint_7"])
+    # plt.hold(False)
     # plt.show()
+    # exit()
     # ---------------------------- end of plotting ----------------------------------
     # Create velocity bounds, then velocity constraint object
     dof = 7
     vlim_ = np.ones(dof) * 5 #* speed_ratio
     vlim = np.vstack((-vlim_, vlim_)).T
     # Create acceleration bounds, then acceleration constraint object
-    alim_ = np.ones(dof) * 1 * accel_ratio
+    alim_ = np.ones(dof) * 2 * accel_ratio
     alim = np.vstack((-alim_, alim_)).T
     pc_vel = constraint.JointVelocityConstraint(vlim)
     pc_acc = constraint.JointAccelerationConstraint(
@@ -360,8 +363,8 @@ def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=N
     # Retime the trajectory, only this step is necessary.
     t0 = time.time()
     jnt_traj, aux_traj = instance.compute_trajectory(0, 0)
-    print("Parameterization time: {:} secs".format(time.time() - t0))
-    ts_sample = np.linspace(0, jnt_traj.get_duration(), 100000)
+    print("TOPPRA Parameterization time: {:} secs".format(time.time() - t0))
+    ts_sample = np.linspace(0, jnt_traj.get_duration(), 800)
     position_output = jnt_traj.eval(ts_sample)
     velocity_output = jnt_traj.evald(ts_sample)
     acceleration_output = jnt_traj.evaldd(ts_sample)
@@ -496,11 +499,13 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     # 0.05 both
     # TODO
     if workspace:
-        y_offset = 0.017
-        x_offset = 0.025 + 0.004 # 0m is the camera offset from the gripper center
+        y_offset = 0.017 + 0.016
+        x_offset = 0.025 + 0.004 - 0.005 - in_to_m(0.075) - in_to_m(0.3) # 0m is the camera offset from the gripper center
     else:
-        y_offset = 0 + 0.015 + 0.008
-        x_offset = in_to_m(1.8) - 0.02
+        y_offset = 0.017 + 0.016
+        x_offset = 0.025 - 0.001 - in_to_m(0.075) - in_to_m(0.15) - in_to_m(0.15) # 0m is the camera offset from the gripper center
+    #     y_offset = 0 + 0.015 + 0.018
+    #     x_offset = in_to_m(1.8) - 0.025
     # y_offset = 0.005
     # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
     print("Beginning Grasp execute\n----------------------------------------------------------------")
@@ -552,7 +557,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
 
     # TODO: move_move(limb, group, positions=..., speed_ratio=...)
     move_move(limb, group, top_grasp_joint, speed_ratio=0.3)
-    move_move(limb, group, mid_grasp_joint, speed_ratio=0.2)
+    # move_move(limb, group, mid_grasp_joint, speed_ratio=0.2)
     move_move(limb, group, down_grasp_joint, speed_ratio=0.2)
     rospy.sleep(1)
     gripper.close()
@@ -562,7 +567,6 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     rospy.sleep(1)
     print("Completing grasp execute\n------------------------------------------------------")
 # ======================================================================================
-
 
 def dropExecute(limb, gripper, drop_off_location, dQ, group, operation_height, temp_workspace):
     Qua = euler_to_quaternion(z=drop_off_location[3])
@@ -579,10 +583,10 @@ def dropExecute(limb, gripper, drop_off_location, dQ, group, operation_height, t
                                           p_x=x, p_y=y, p_z=z,
                                           q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
     move_move(limb, group, top_drop_position)
-    move_move(limb, group, mid_drop_position)
+    # move_move(limb, group, mid_drop_position)
     move_move(limb, group, down_drop_position, speed_ratio=0.2)
     gripper.open()
-    move_move(limb, group, mid_drop_position)
+    # move_move(limb, group, mid_drop_position)
     move_move(limb, group, top_drop_position)
 
 
@@ -840,3 +844,75 @@ def euler_to_quaternion(x=None, y=None, z=None):
     else:
         z = z - math.pi
     return transformations.quaternion_from_euler(x, y, z)
+
+
+def dropBlockByImageExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace):
+    # 0.05 both
+    # TODO
+    # if workspace:
+    y_offset = 0.017 + 0.016
+    x_offset = 0.025 - 0.001 - in_to_m(0.075) - in_to_m(0.15) - in_to_m(0.15) # 0m is the camera offset from the gripper center
+    # else:
+    #     y_offset = 0 + 0.015 + 0.018
+    #     x_offset = in_to_m(1.8) - 0.025
+    # y_offset = 0.005
+    # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
+    print("Beginning Grasp execute\n----------------------------------------------------------------")
+    [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
+    # print('endEffPos, x: ', endEffPos[0])
+    # print('endEffPos, y: ', endEffPos[1])
+    # print('endEffPos, z: ', endEffPos[2])
+    hom_rotGrasp = transformations.rotation_matrix(Ang, (0, 0, 1))
+    hom_rotGrasp1 = np.dot(hom_Mtrx_c_b, hom_rotGrasp)
+    # hom_rotGrasp1[0][3] = 0
+    # hom_rotGrasp1[1][3] = 0
+    # hom_rotGrasp1[2][3] = 0
+    # print (hom_rotGrasp1)
+    # quat = transformations.quaternion_from_matrix(hom_Mtrx_c_b)
+    quat3 = transformations.quaternion_about_axis(Ang, (0, 0, 1))
+    quat2 = transformations.quaternion_about_axis(-np.pi / 2.0, (0, 0, 1))
+    # quat1 = transformations.quaternion_about_axis(np.pi, (1, 0, 0))
+    #
+    quat = transformations.quaternion_multiply(quat3, quat2)  # transformations.quaternion_multiply(quat2, quat1))
+    # print(quat)
+    # print(transformations.rotation_from_matrix(hom_rotGrasp1))
+
+    angles = limb.joint_angles()
+    endEffAng = angles['right_j6'] # currently 128 degree
+    # print 'Current Joint 6 Angle in World Frame is: ', endEffAng * 180.0 / np.pi
+    targetAng = endEffAng + Ang
+
+    x_target = (endEffPos[0] + x_ref) * 0.5
+    y_target = (endEffPos[1] + y_ref) * 0.5
+    quat_replace = euler_to_quaternion(z=-Ang)
+    top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.2,
+                                        q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                        q_w=quat_replace[3])
+    mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.15,
+                                        q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                        q_w=quat_replace[3])
+    down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                         p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
+                                         q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                         q_w=quat_replace[3])
+    lstTop = list(top_grasp_joint)
+    lstMid = list(mid_grasp_joint)
+    lstDown = list(down_grasp_joint)
+    top_grasp_joint = tuple(lstTop)
+    mid_grasp_joint = tuple(lstMid)
+    down_grasp_joint = tuple(lstDown)
+
+    # TODO: move_move(limb, group, positions=..., speed_ratio=...)
+    move_move(limb, group, top_grasp_joint, speed_ratio=0.3)
+    move_move(limb, group, mid_grasp_joint, speed_ratio=0.2)
+    move_move(limb, group, down_grasp_joint, speed_ratio=0.2)
+    rospy.sleep(1)
+    gripper.open()
+    # exit()
+    move_move(limb, group, top_grasp_joint, speed_ratio=0.2)
+    # gripper.open()  // commented out by CRY 10-02-2018
+    rospy.sleep(1)
+    print("Completing grasp execute\n------------------------------------------------------")
+# ======================================================================================

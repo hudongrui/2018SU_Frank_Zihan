@@ -561,8 +561,8 @@ def find_square_closest_to_center(img, square_list):
 # NOTE: All the commented code blocks appeared in the method below are for debugging purpose
 # Uncomment them to display intermediate outputs
 #########################################################################################
-def square_img_to_centers_list(img, worksapce, square=None):
-    if worksapce:
+def square_img_to_centers_list(img, workspace, square=None):
+    if workspace:
         # Right
         mask = io.imread("Background_Right.jpg")
     else:
@@ -773,13 +773,101 @@ def drop_destinations(workspace):
 
     i = random.randint(0, len(four_block_presets) - 1)
     print "Assuming four blocks in work space, using preset " + str(i + 1)
-    return get_location(four_block_presets[i], workspace)
+    return get_location(preset_0, workspace)
+
+
+def read_tasks_from_file():
+	# Read all the image file
+	task_img = []
+
+	# TODO: For now there are 12 picture setup in the folder
+	for i in range(1,13):
+		file_name = "task_" + str(i) + ".jpg"
+		task_img.append(io.imread(file_name))
+
+
+	# Process each image to return a list of task
+	task_coordinate = []
+	for img in task_img:
+		list_of_coordinates = []
+
+		img_gray =  cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+		_, binary_img = cv2.threshold(img_gray, 150, 255, cv2.THRESH_BINARY)
+
+		# cv2.imshow("Gray_img", binary_img)
+		# cv2.waitKey()
+
+		height, width, _ = img.shape
+
+		cnt_img, cnts, hierarchy = cv2.findContours(binary_img, cv2.RETR_TREE,
+										cv2.CHAIN_APPROX_SIMPLE)
+
+		blank_img = np.zeros((height, width, 3), np.uint8)
+		blank_img[:,:] = (255,255,255) 
+
+		n = 0
+		for i in range (len(cnts)):
+
+			cnt = cnts[i]
+
+			if cv2.contourArea(cnt) > 2000 and cv2.contourArea(cnt) < 5000 and hierarchy[0, i, 2] == -1:
+				rect = cv2.minAreaRect(cnt)
+				theta = rect[2]
+
+				# print str(n) + ' ' + str(rect)
+
+				box = cv2.boxPoints(rect)
+				box = np.int0(box)
+				# cv2.drawContours(blank_img,[box],0,(255,0,0),2)
+
+				# M = cv2.moments(cnt)
+				# cx = int(M['m10']/M['m00'])
+				# cy = int(M['m01']/M['m00'])
+				cx = int(rect[0][0])
+				cy = int(rect[0][1])
+
+				x = cx - width/2
+				y = cy - height/2
+				z = 0
+
+				list_of_coordinates.append([-y, -x, z, theta])
+				n += 1
+		
+		# exit()		
+		# cv2.imshow("Contour", blank_img)
+		# cv2.waitKey()
+		task_coordinate.append(list_of_coordinates)
+
+	return task_coordinate
+
+def get_loc_by_pixel(workspace, task):
+	
+	if workspace:
+		# Workspace on human's left
+		ctr_x, ctr_y, ctr_z = Gp.in_to_m(20 + 3.2), Gp.in_to_m(19), 0.1
+	else:
+	    # Workspace on human's right
+	    ctr_x, ctr_y, ctr_z = Gp.in_to_m(20 + 3.2), Gp.in_to_m(-19), 0.1
+
+
+	locations = []
+
+	factor = Gp.in_to_m(0.035238) * 0.8
+
+	for loc in task:	
+	    px, py, z, theta = loc[0], loc[1], loc[2], loc[3]
+
+	    x, y, z = ctr_x + px * factor, ctr_y + py * factor, ctr_z + z
+	    locations.append([x, y, z, theta])
+
+	return locations
+
 
 
 # This the function for finding the marked area for drop off 
-def get_marked_location(img, workspace):
+def get_marked_location(img, workspace, square = None):
 
-    if worksapce:
+    if workspace:
         # Right
         mask = io.imread("Background_Right.jpg")
     else:
@@ -913,4 +1001,5 @@ def get_marked_location(img, workspace):
     # cv2.waitKey()
     # cv2.waitKey(1000)
     # cv2.destroyAllWindows()
-    return found_rect
+
+	return found_rect[0]

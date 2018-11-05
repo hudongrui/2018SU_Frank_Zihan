@@ -72,7 +72,7 @@ eef_link = group.get_end_effector_link()
 Gp.load_objects(scene, planning_frame)
 Gp.load_camera_w_mount(scene)
 
-pre_grasp_pos = camera_center_human_right
+pre_grasp_pos = camera_center_human_left
 Gp.move_move(limb, group, pre_grasp_pos)
 # Gp.avoid_move(group, camera_center_human_right)
 rospy.sleep(1)

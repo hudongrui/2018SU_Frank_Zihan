@@ -71,8 +71,8 @@ number_of_blocks_left = 0
 block_index = 0
 
 # false indicates pickup location is on the left and true is right
-temp_workspace = True
-iterations = 5  # how many times does the robot have to repeatedly grab the blocks
+temp_workspace = False
+iterations = 1  # how many times does the robot have to repeatedly grab the blocks
 
 while iterations != 0:
 
@@ -137,7 +137,12 @@ while iterations != 0:
     img = Gp.take_picture(0, 30)
     drop_off_location = iH.get_marked_location(img, temp_workspace)
 
-    Gp.dropExecute(limb,gripper,drop_off_location, dQ, group, operation_height, temp_workspace)
+
+    H, W, Ang = gi.predictGraspOnImage(img, [drop_off_location.getCenter().x, drop_off_location.getCenter().y])
+    worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(drop_off_location.getCenterX(), drop_off_location.getCenterY())
+    Ang = 0
+
+    Gp.dropBlockByImageExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1, group, temp_workspace)
 
     # While loop recur
     temp_workspace = not temp_workspace

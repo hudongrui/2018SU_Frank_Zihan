@@ -51,12 +51,12 @@ operation_height = 0.443
 
 # x = 36 inch, y = -18 inch
 camera_center_human_right = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=Gp.in_to_m(25), p_y=Gp.in_to_m(-19), p_z=operation_height,
+                                          p_x=Gp.in_to_m(20), p_y=Gp.in_to_m(-19), p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
 # x = 36 inch, y = 18 inch
 camera_center_human_left = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=Gp.in_to_m(25), p_y=Gp.in_to_m(19), p_z=operation_height,
+                                          p_x=Gp.in_to_m(20), p_y=Gp.in_to_m(19), p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
 # this is the our desired Quaternion matrix
@@ -100,13 +100,22 @@ block_index = 0
 
 # false indicates pickup location is on the left and true is right
 temp_workspace = True
-iterations = 5  # how many times does the robot have to repeatedly grab the blocks
+iterations = 1  # how many times does the robot have to repeatedly grab the blocks
+task_num = 0
 if debugMode == 0:
     Gp.move_move(limb, group, safe_move_r2l)
 
+# Read tasks from folder
+tasks = iH.read_tasks_from_file()
+
 while iterations != 0:
     # Below returns a set of coordinates where we want to drop the block.
-    task = iH.drop_destinations(temp_workspace)
+    # TODO choose below
+    task = iH.get_loc_by_pixel(temp_workspace, tasks[task_num])
+    # task = iH.drop_destinations(temp_workspace)
+
+    print "Executing iteration " + str(task_num + 1)
+
     if temp_workspace:
         pre_grasp_pos = camera_center_human_right
     else:
@@ -161,6 +170,10 @@ while iterations != 0:
         Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1, group, temp_workspace)
         # Gp.move_move(limb, group, moveJoint)
 
+        print "The angle of the block is " + str(drop_off_location[3])
+        print ''
+        print ''
+
         Gp.dropExecute(limb,gripper,drop_off_location, dQ, group, operation_height, temp_workspace)
 
         block = square_list[0]
@@ -171,6 +184,7 @@ while iterations != 0:
     temp_workspace = not temp_workspace
     # cv2.destroyAllWindows()
     iterations -= 1
+    task_num += 1
 
 print "Task completed."
 

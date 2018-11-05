@@ -21,18 +21,18 @@ gripper.open()
 headDisplay = head.HeadDisplay()
 rospy.sleep(1)
 # Pre-grasping joint angles
-dQ = Gp.euler_to_quaternion(z=3.1415)
+dQ = Gp.euler_to_quaternion(z=0)
 # print dQ
 operation_height = 0.443
 
-# x = 5 inch = 0.13m y = 33 inch = 0.83m
+# x = 36 inch, y = -18 inch
 camera_center_human_right = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=0.13, p_y=0.83, p_z=operation_height,
+                                          p_x=Gp.in_to_m(25), p_y=Gp.in_to_m(-19), p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
-# x = -5 inch = -0.13m y = -36 inch = -0.91
+# x = 36 inch, y = 18 inch
 camera_center_human_left = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=-0.13, p_y=-0.91, p_z=operation_height,
+                                          p_x=Gp.in_to_m(25), p_y=Gp.in_to_m(19), p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
 moveComm = Gp.moveit_commander
