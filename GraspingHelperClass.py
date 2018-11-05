@@ -303,6 +303,28 @@ def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=Non
 
 
 def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
+    if speed_ratio is None:
+        speed_ratio = 0.3
+    if accel_ratio is None:
+        accel_ratio = 0.1
+    plan = group.plan(target)
+    rospy.sleep(1)
+    step = []
+    for point in plan.joint_trajectory.points:
+        step.append(point.positions)
+    traj = MotionTrajectory(limb=limb)
+    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
+                                     max_joint_accel=accel_ratio)
+    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
+    for point in step:
+        waypoint.set_joint_angles(joint_angles=point)
+    traj.append_waypoint(waypoint.to_msg())
+    traj.send_trajectory(timeout=timeout)
+    group.stop()
+    group.clear_pose_targets()
+
+
+def move_move_to_be_tested(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
     trajectory_publisher = rospy.Publisher('/robot/limb/right/joint_command', JointCommand, queue_size = 1)
     JointCommandMessage = JointCommand()
     JointCommandMessage.mode = 4
