@@ -222,6 +222,7 @@ while True:
     if frame is None:
         continue
     else:
+        
         H, W, Ang = gi.predictGraspOnImage(frame)
         print(H)  # y-coord of pixel position
         print(W)  # x-coord of pixel position

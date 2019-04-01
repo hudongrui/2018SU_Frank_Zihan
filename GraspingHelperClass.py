@@ -4,12 +4,15 @@ import math
 import cv2
 import tf
 import numpy as np
+import serial
 import camera_calib_BMW as camCalib
 import transformations
 import os
 import intera_interface
 import sys
 import matplotlib.pyplot as plt
+import freenect
+import frame_convert2
 from scipy import integrate
 from geometry_msgs.msg import (
     PoseStamped,
@@ -84,7 +87,7 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
     #     return_joint = camera_center_human_left
     # if demo:
     #     return_joint = inter_position_for_demo
-    print type(limb)
+    # print type(limb)
     return_joint = intera_interface.Limb(limb).joint_ordered_angles()
 
     poses = {
@@ -126,8 +129,8 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
                 ikreq.SEED_CURRENT: 'Current Joint Angles',
                 ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
             }.get(resp.result_type[0], 'None')
-            rospy.loginfo("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
-                          (seed_str,))
+            # rospy.loginfo("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
+            #               (seed_str,))
             return_joint = resp.joints[0].position
             attempts = 5
         else:
@@ -138,6 +141,7 @@ def ik_service_client(limb, use_advanced_options, p_x, p_y, p_z, q_x, q_y, q_z, 
         attempts += 1
 
     return return_joint
+
 
 
 def smooth_move(limb, positions, speed_ratio=None, accel_ratio=None, timeout=None):
@@ -301,6 +305,30 @@ def avoid_move(group, positions, speed_ratio=None, accel_ratio=None, timeout=Non
     group.stop()
     group.clear_pose_targets()
 
+def move_move_haha(limb, group, positions, speed_ratio=None, accel_ratio=None, timeout=None):
+    # this move method is obtained from Intera motion control interface
+    # limb -- the limb object of the Sawyer robot
+    # position -- a list with a length of 7, specifying the goal state joint position
+    # speed_ratio -- the speed of robot arm, [0, 1]
+    # accel_ratio -- the acceleration of the robot arm, [0, 1]
+    # timeout -- the timeout for this specific motion; infinite when None
+    rospy.sleep(1)
+    if accel_ratio is None:
+        accel_ratio = 0.1
+    if speed_ratio is None:
+        speed_ratio = 0.3
+    traj = MotionTrajectory(limb=limb)
+ 
+    wpt_opts = MotionWaypointOptions(max_joint_speed_ratio=speed_ratio,
+                                     max_joint_accel=accel_ratio)
+    waypoint = MotionWaypoint(options=wpt_opts.to_msg(), limb=limb)
+ 
+    waypoint.set_joint_angles(joint_angles=positions)
+    traj.append_waypoint(waypoint.to_msg())
+ 
+    traj.send_trajectory(timeout=timeout)
+    rospy.sleep(1)
+
 
 def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
     if speed_ratio is None:
@@ -308,7 +336,7 @@ def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=N
     if accel_ratio is None:
         accel_ratio = 0.1
     plan = group.plan(target)
-    rospy.sleep(1)
+    # rospy.sleep(1)
     step = []
     for point in plan.joint_trajectory.points:
         step.append(point.positions)
@@ -324,7 +352,7 @@ def move_move(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=N
     group.clear_pose_targets()
 
 
-def move_move_to_be_tested(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
+def move_move_no(limb, group, target, speed_ratio=None, accel_ratio=None, timeout=None):
     trajectory_publisher = rospy.Publisher('/robot/limb/right/joint_command', JointCommand, queue_size = 1)
     JointCommandMessage = JointCommand()
     JointCommandMessage.mode = 4
@@ -482,7 +510,7 @@ def pixelToWorld(u, v):
 
     hom_Mtrx_c_g = transformations.rotation_matrix(-math.pi / 2.0, [0, 0, 1], [0, 0, 0]) ## this is the key thing to check and verify
     # hom_Mtrx_c_g = transformations.rotation_matrix(0, (0, 0, 1))
-    hom_Mtrx_c_g[0][3] = in_to_m(-2.5) ## this is a guess number from gripper to camera
+    hom_Mtrx_c_g[0][3] = in_to_m(-3.2) ## this is a guess number from gripper to camera
     # print hom_Mtrx_c_g
 
     ## this is just calculating the transformation matrix from base to camera
@@ -515,17 +543,99 @@ def pixelToWorld(u, v):
 
 # ======================================================================================
 
+def graspExecuteSuction(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace, ser):
+# 0.05 both
+    # TODO
+    if workspace:
+        y_offset = 0.017 + 0.016
+        x_offset = 0.025 + 0.004 - 0.005 - in_to_m(0.075) - in_to_m(0.3) - 0.017  + in_to_m(1.21)# 0m is the camera offset from the gripper center
+    else:
+        y_offset = 0.017 + 0.016
+        x_offset = 0.025 - 0.001 - in_to_m(0.075) - in_to_m(0.15) - in_to_m(0.15) - 0.018 + in_to_m(1.28) # 0m is the camera offset from the gripper center
+    #     y_offset = 0 + 0.015 + 0.018
+    #     x_offset = in_to_m(1.8) - 0.025
+    # y_offset = 0.005
+    # x_offset = 0.065 + 0 # 0m is the camera offset from the gripper center
+    print("Beginning Grasp execute\n----------------------------------------------------------------")
+    [endEffPos, hom_Mtrx_c_b, rotOriginal] = pixelToWorld(W, H)
+    # print('endEffPos, x: ', endEffPos[0])
+    # print('endEffPos, y: ', endEffPos[1])
+    # print('endEffPos, z: ', endEffPos[2])
+    hom_rotGrasp = transformations.rotation_matrix(Ang, (0, 0, 1))
+    hom_rotGrasp1 = np.dot(hom_Mtrx_c_b, hom_rotGrasp)
+    # hom_rotGrasp1[0][3] = 0
+    # hom_rotGrasp1[1][3] = 0
+    # hom_rotGrasp1[2][3] = 0
+    # print (hom_rotGrasp1)
+    # quat = transformations.quaternion_from_matrix(hom_Mtrx_c_b)
+    quat3 = transformations.quaternion_about_axis(Ang, (0, 0, 1))
+    quat2 = transformations.quaternion_about_axis(-np.pi / 2.0, (0, 0, 1))
+    # quat1 = transformations.quaternion_about_axis(np.pi, (1, 0, 0))
+    #
+    quat = transformations.quaternion_multiply(quat3, quat2)  # transformations.quaternion_multiply(quat2, quat1))
+    # print(quat)
+    # print(transformations.rotation_from_matrix(hom_rotGrasp1))
+
+    angles = limb.joint_angles()
+    endEffAng = angles['right_j6'] # currently 128 degree
+    # print 'Current Joint 6 Angle in World Frame is: ', endEffAng * 180.0 / np.pi
+    targetAng = endEffAng + Ang
+
+    x_target = (endEffPos[0] + x_ref) * 0.5
+    y_target = (endEffPos[1] + y_ref) * 0.5
+    quat_replace = euler_to_quaternion(z=-Ang)
+    top_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.2,
+                                        q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                        q_w=quat_replace[3])
+    mid_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                        p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.15,
+                                        q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                        q_w=quat_replace[3])
+    down_grasp_joint = ik_service_client(limb='right', use_advanced_options=True,
+                                         p_x=x_target + x_offset, p_y=y_target + y_offset, p_z=0.1,
+                                         q_x=quat_replace[0], q_y=quat_replace[1], q_z=quat_replace[2],
+                                         q_w=quat_replace[3])
+    lstTop = list(top_grasp_joint)
+    lstMid = list(mid_grasp_joint)
+    lstDown = list(down_grasp_joint)
+    top_grasp_joint = tuple(lstTop)
+    mid_grasp_joint = tuple(lstMid)
+    down_grasp_joint = tuple(lstDown)
+
+    # TODO: move_move(limb, group, positions=..., speed_ratio=...)
+    move_move(limb, group, top_grasp_joint, speed_ratio=0.3)
+    # move_move(limb, group, mid_grasp_joint, speed_ratio=0.2)
+    move_move(limb, group, down_grasp_joint, speed_ratio=0.2)
+    # rospy.sleep(1)
+    #gripper.close()
+    suctionOpen(ser)
+    # exit()
+    move_move(limb, group, top_grasp_joint, speed_ratio=0.2)
+    # gripper.open()  // commented out by CRY 10-02-2018
+    # rospy.sleep(1)
+
+#=======================================================================================
+def suctionOpen(ser):
+
+    # TODO: sudo usermod -a -G dialout team18
+    # TODO: sudo chmod a+rw /dev/ttyACM0
+    # ser = serial.Serial('/dev/ttyACM0', 9600)
+    ser.write("open")
+    rospy.sleep(2)
+    # ser.close()
 
 # ======================================================================================
 def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace):
     # 0.05 both
     # TODO
     if workspace:
-        y_offset = 0.017 + 0.016
-        x_offset = 0.025 + 0.004 - 0.005 - in_to_m(0.075) - in_to_m(0.3) # 0m is the camera offset from the gripper center
+        y_offset = 0.017 + 0.016 - in_to_m(2.75)
+        y_offset = 0.017 + 0.016 # For 2D camera
+        x_offset = 0.025 + 0.004 - 0.005 - in_to_m(0.075) - in_to_m(0.3) - 0.017 - in_to_m(0.5) # 0m is the camera offset from the gripper center
     else:
-        y_offset = 0.017 + 0.016
-        x_offset = 0.025 - 0.001 - in_to_m(0.075) - in_to_m(0.15) - in_to_m(0.15) # 0m is the camera offset from the gripper center
+        y_offset = 0.017 + 0.016 - in_to_m(2.75)
+        x_offset = 0.025 - 0.001 - in_to_m(0.075) - in_to_m(0.15) - in_to_m(0.15) - 0.018 - in_to_m(0.5) # 0m is the camera offset from the gripper center
     #     y_offset = 0 + 0.015 + 0.018
     #     x_offset = in_to_m(1.8) - 0.025
     # y_offset = 0.005
@@ -583,7 +693,7 @@ def graspExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group, workspace
     move_move(limb, group, down_grasp_joint, speed_ratio=0.2)
     rospy.sleep(1)
     gripper.close()
-    # exit()
+
     move_move(limb, group, top_grasp_joint, speed_ratio=0.2)
     # gripper.open()  // commented out by CRY 10-02-2018
     rospy.sleep(1)
@@ -605,13 +715,40 @@ def dropExecute(limb, gripper, drop_off_location, dQ, group, operation_height, t
                                           p_x=x, p_y=y, p_z=z,
                                           q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
     move_move(limb, group, top_drop_position)
-    # move_move(limb, group, mid_drop_position)
+    move_move(limb, group, mid_drop_position)
     move_move(limb, group, down_drop_position, speed_ratio=0.2)
     gripper.open()
-    # move_move(limb, group, mid_drop_position)
+    move_move(limb, group, mid_drop_position)
     move_move(limb, group, top_drop_position)
 
-
+# ======================================================================================
+def dropExecuteSuction(limb, gripper, drop_off_location, dQ, group, operation_height, temp_workspace, ser):
+    Qua = euler_to_quaternion(z=drop_off_location[3])
+    x = drop_off_location[0]
+    y = drop_off_location[1]
+    z = drop_off_location[2]
+    top_drop_position = ik_service_client(limb='right', use_advanced_options=True,
+                                              p_x=x, p_y=y, p_z=operation_height,
+                                              q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3],workspace=temp_workspace)
+    mid_drop_position = ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=x, p_y=y, p_z=operation_height + z - 0.2,
+                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3],workspace=temp_workspace)
+    down_drop_position = ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=x, p_y=y, p_z=z,
+                                          q_x=Qua[0], q_y=Qua[1], q_z=Qua[2], q_w=Qua[3],workspace=temp_workspace)
+    move_move(limb, group, top_drop_position)
+    move_move(limb, group, mid_drop_position)
+    move_move(limb, group, down_drop_position, speed_ratio=0.2)
+    suctionClose(ser)
+    move_move(limb, group, mid_drop_position)
+    move_move(limb, group, top_drop_position)
+    print("Completing grasp execute\n------------------------------------------------------")
+# ======================================================================================
+def suctionClose(ser):
+    # ser = serial.Serial('/dev/ttyACM0', 9600)
+    ser.write("close")
+    rospy.sleep(2)
+    # ser.close()
 
 # ======================================================================================
 def take_picture(camera_port, ramp_frames):
@@ -648,7 +785,8 @@ def take_picture(camera_port, ramp_frames):
 
 
 # ======================================================================================
-
+def get_video():
+    return np.array(frame_convert2.video_cv(freenect.sync_get_video()[0]))
 
 # ======================================================================================
 def detect_objects(fruit_number, img):
@@ -657,6 +795,8 @@ def detect_objects(fruit_number, img):
     # file_name = now.strftime("%Y-%m-%d")
     # img = cv2.imread(str(take_picture(file_name)), 1)
     # img = cv2.imread("/home/Documents/2018-01-27.png", 1)
+    # cv2.imshow('image', img)
+    # cv2.waitKey()
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     lower_range_apple = np.array([40, 70, 100], dtype=np.uint8)  # np.array([10, 150, 70], dtype=np.uint8)
@@ -853,7 +993,9 @@ def load_images_from_folder(folder):
 
 # from Henry & Frank
 def euler_to_quaternion(x=None, y=None, z=None):
-    # Attention all units in radian
+    # Attention all units in radian!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # if you happened to use degree, you need to take your own 
+    #           responsibilitiy to debug everything!!!!!!!!!!!!!!!!!!!!!!!!!!
     # x - rotation angle about the x axis (heading)
     # y - rotation angle about the y axis (attitude)
     # z - rotation angle about the z axis (bank)
@@ -872,8 +1014,8 @@ def dropBlockByImageExecute(limb, gripper, W, H, Ang, x_ref, y_ref, table, group
     # 0.05 both
     # TODO
     # if workspace:
-    y_offset = 0.017 + 0.016
-    x_offset = 0.025 - 0.001 - in_to_m(0.075) - in_to_m(0.15) - in_to_m(0.15) # 0m is the camera offset from the gripper center
+    y_offset = 0.017 + 0.016 - 0.005 - in_to_m(2.625)
+    x_offset = 0.025 + 0.004 - 0.005 - in_to_m(0.075) - in_to_m(0.3) - 0.017# 0m is the camera offset from the gripper center
     # else:
     #     y_offset = 0 + 0.015 + 0.018
     #     x_offset = in_to_m(1.8) - 0.025
