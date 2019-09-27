@@ -24,8 +24,6 @@ rospy.init_node("NLP")
 headDisplay = head.HeadDisplay()
 
 
-
-
 # These constants control the beam search decoder
 
 # Beam width used in the CTC decoder when building candidate transcriptions

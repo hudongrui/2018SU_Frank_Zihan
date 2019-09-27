@@ -11,6 +11,7 @@ import rospy
 import GraspingHelperClass as Gp
 import graspObjectImageFunc as gi
 import interceptHelper as iH
+import gc
 
 debugMode = 1800
 
@@ -28,7 +29,7 @@ headDisplay = head.HeadDisplay()
 crazyMode = False
 ##################################################################################
 dQ = Gp.euler_to_quaternion(z=0)
-# print dQ
+
 operation_height = 0.443
 
 # # x = 5 inch = 0.13m y = 33 inch = 0.83m
@@ -51,12 +52,12 @@ operation_height = 0.443
 
 # x = 36 inch, y = -18 inch
 camera_center_human_right = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=Gp.in_to_m(20), p_y=Gp.in_to_m(-19), p_z=operation_height,
+                                          p_x=Gp.in_to_m(20), p_y=Gp.in_to_m(-17), p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
 # x = 36 inch, y = 18 inch
 camera_center_human_left = Gp.ik_service_client(limb='right', use_advanced_options=True,
-                                          p_x=Gp.in_to_m(20), p_y=Gp.in_to_m(19), p_z=operation_height,
+                                          p_x=Gp.in_to_m(20), p_y=Gp.in_to_m(16), p_z=operation_height,
                                           q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 
 # this is the our desired Quaternion matrix
@@ -100,7 +101,7 @@ block_index = 0
 
 # false indicates pickup location is on the left and true is right
 temp_workspace = True
-iterations = 1  # how many times does the robot have to repeatedly grab the blocks
+iterations = 12  # how many times does the robot have to repeatedly grab the blocks
 task_num = 0
 if debugMode == 0:
     Gp.move_move(limb, group, safe_move_r2l)
@@ -132,12 +133,11 @@ while iterations != 0:
 
         timeout = 0
         while square_list is None:
-            if timeout > 10:
+            if timeout > 20:
                 rospy.logerr("No block exists in the frame. Returning to initial position")
                 exit()
             img = Gp.take_picture(0, 30)
             square_list = iH.square_img_to_centers_list(img, temp_workspace)
-            number_of_blocks_left = len(square_list)
             timeout += 1
 
         square_to_find = iH.find_square_closest_to_center(img, square_list)
@@ -157,22 +157,29 @@ while iterations != 0:
 
     #    Gp.move_move(limb, group, positions=moveJoint)
         Gp.move_move(limb, group, moveJoint)
-
+        gc.collect()
         # Retake image about the block for recognition
         img = Gp.take_picture(0, 30)
         square_list = iH.square_img_to_centers_list(img, temp_workspace)
 
+        timeout = 0
+        while square_list is None:
+            if timeout > 20:
+                rospy.logerr("No block exists in the frame. Returning to initial position")
+                exit()
+            img = Gp.take_picture(0, 30)
+            square_list = iH.square_img_to_centers_list(img, temp_workspace)
+            timeout += 1
+
         square_to_find = iH.find_square_closest_to_center(img, square_list)
 
-        H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
+        W = square_to_find.getCenter().x
+        H = square_to_find.getCenter().y
+        # H, W, Ang = gi.predictGraspOnImage(img, [square_to_find.getCenter().x, square_to_find.getCenter().y])
         worldVec, hom_Mtrx_c_b, rot = Gp.pixelToWorld(square_to_find.getCenterX(), square_to_find.getCenterY())
         Ang = square_to_find.getAngle(square_list)
         Gp.graspExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1, group, temp_workspace)
         # Gp.move_move(limb, group, moveJoint)
-
-        print "The angle of the block is " + str(drop_off_location[3])
-        print ''
-        print ''
 
         Gp.dropExecute(limb,gripper,drop_off_location, dQ, group, operation_height, temp_workspace)
 
@@ -181,10 +188,13 @@ while iterations != 0:
         block.setLocation(drop_off_location, dQ)
         # While loop stuff
         block_index += 1
+        # free(img)
+        gc.collect()
     temp_workspace = not temp_workspace
     # cv2.destroyAllWindows()
     iterations -= 1
     task_num += 1
+    gc.collect()
 
 print "Task completed."
 

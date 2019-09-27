@@ -5,6 +5,7 @@ import intera_interface.head_display as head
 import cv2
 import GraspingHelperClass as Gp
 import sys
+import time
 
 ############################################################
 # This script takes the robot to pre-grasp position,
@@ -58,12 +59,17 @@ dQ = Gp.euler_to_quaternion(z=3.1415/2)
 print dQ
 operation_height = 0.25
 
-drop_block_pos = camera_center_human_left
+drop_block_pos = camera_center_human_right
 
+start = time.time()
 Gp.move_move(limb, group, drop_block_pos, 0.2)
+end = time.time()
+
+print end - start
+
 rospy.sleep(1)
 
-img = Gp.take_picture(0, 30)
+# img = Gp.take_picture(0, 30)
 # square_list = iH.square_img_to_centers_list(img)
 # number_of_blocks_left = len(square_list)
 # timeout += 1

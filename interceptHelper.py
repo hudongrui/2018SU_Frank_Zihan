@@ -422,7 +422,6 @@ def refine_range(angle, lowerLimit=None, upperLimit=None, modifier=None):
     if modifier is None:
         modifier = 180
     while angle > upperLimit or angle < lowerLimit:
-        print 'hahaha'
         if angle < lowerLimit:
             angle += modifier
         elif angle > upperLimit:
@@ -562,6 +561,8 @@ def find_square_closest_to_center(img, square_list):
 # Uncomment them to display intermediate outputs
 #########################################################################################
 def square_img_to_centers_list(img, workspace, square=None):
+	#If using the Kinect camera, add _Kinect to the end of the file name.
+	#If using the webcam, make sure the name doesn't have _Kinect on the end
     if workspace:
         # Right
         mask = io.imread("Background_Right.jpg")
@@ -666,21 +667,20 @@ def square_img_to_centers_list(img, workspace, square=None):
     number_of_center = 0
     height, width, _ = img.shape
     blank_image = img.copy()
+    if found_rect is not None:
+    	print("Found " + str(len(found_rect)) + " blocks in the frame")
 
-    print("Found " + str(len(found_rect)) + " blocks in the frame")
-    if len(found_rect) == 0:
-        print("Could not find any blocks.")
 
-    for point in intersections:
-        cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
+    # for point in intersections:
+    #     cv2.circle(blank_image, (point.x, point.y), 5, (255, 255, 255), -1)
 
-    rect_cnt = 0
-    for index in found_rect:
-        number_of_center += 1
-        cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
-        cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
-        rect_cnt = rect_cnt + 1
+    # rect_cnt = 0
+    # for index in found_rect:
+    #     number_of_center += 1
+    #     cv2.circle(blank_image, (int(index.center.x), int(index.center.y)), 7, (0, 255, 255), -1)
+    #     cv2.putText(blank_image, str(rect_cnt + 1), (int(index.center.x + 5), int(index.center.y - 20)),
+    #                 cv2.FONT_HERSHEY_COMPLEX, 0.5, (50, 200, 200), 1)
+    #     rect_cnt = rect_cnt + 1
 
     # for rect in found_rect:
     #     rect.drawDiagonal1(blank_image)
@@ -812,7 +812,7 @@ def read_tasks_from_file():
 
 			if cv2.contourArea(cnt) > 2000 and cv2.contourArea(cnt) < 5000 and hierarchy[0, i, 2] == -1:
 				rect = cv2.minAreaRect(cnt)
-				theta = rect[2]
+				theta = refine_range(90 - rect[2], -90, 90, 180)
 
 				# print str(n) + ' ' + str(rect)
 
@@ -829,7 +829,6 @@ def read_tasks_from_file():
 				x = cx - width/2
 				y = cy - height/2
 				z = 0
-
 				list_of_coordinates.append([-y, -x, z, theta])
 				n += 1
 		
@@ -844,21 +843,26 @@ def get_loc_by_pixel(workspace, task):
 	
 	if workspace:
 		# Workspace on human's left
-		ctr_x, ctr_y, ctr_z = Gp.in_to_m(20 + 3.2), Gp.in_to_m(19), 0.1
+		ctr_x, ctr_y, ctr_z = Gp.in_to_m(20 + 3.2), Gp.in_to_m(16), 0.1
 	else:
 	    # Workspace on human's right
-	    ctr_x, ctr_y, ctr_z = Gp.in_to_m(20 + 3.2), Gp.in_to_m(-19), 0.1
+	    ctr_x, ctr_y, ctr_z = Gp.in_to_m(20 + 3.2), Gp.in_to_m(-15.5), 0.1
 
 
 	locations = []
 
-	factor = Gp.in_to_m(0.035238) * 0.8
+	factor = Gp.in_to_m(0.035238) * 0.9
 
 	for loc in task:	
 	    px, py, z, theta = loc[0], loc[1], loc[2], loc[3]
 
+	    theta = theta / 180 * np.pi
+
 	    x, y, z = ctr_x + px * factor, ctr_y + py * factor, ctr_z + z
 	    locations.append([x, y, z, theta])
+
+
+	# locations = [[ctr_x,ctr_y,ctr_z,0]]
 
 	return locations
 
@@ -881,7 +885,7 @@ def get_marked_location(img, workspace, square = None):
 
         x = int(ctr_x - 0.5 * dim)
         y = int(ctr_y - 0.5 * dim)
-        l = dim
+        l = dimread_task
         img = img[y: y + l, x:x + l]
         mask = mask[y: y + l, x:x + l]
 
@@ -938,6 +942,7 @@ def get_marked_location(img, workspace, square = None):
     # Optional: Remove Duplicate Lines for Robustness
     # ext_lines = iH.rm_line_duplicates(ext_lines)
     # cv2.imshow("Extend the lines", ext_img)
+    # cv2.waitKey()
 
     intersections = []
     i = 0

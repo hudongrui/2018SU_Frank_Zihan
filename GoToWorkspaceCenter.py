@@ -2,6 +2,7 @@ import subprocess
 import rospy
 import intera_interface
 import intera_interface.head_display as head
+import cv2
 import GraspingHelperClass as Gp
 import sys
 
@@ -14,9 +15,18 @@ gripper.open()
 headDisplay = head.HeadDisplay()
 rospy.sleep(1)
 # Pre-grasping joint angles
-camera_center_human_right = [-0.1047236328125, -0.5071337890625, 1.273416015625, 1.253248046875, -0.9950966796875, 1.472162109375, 2.79098046875]
+dQ = Gp.euler_to_quaternion(z=0)
+operation_height = 0.443
+# x = 36 inch, y = -18 inch
+camera_center_human_right = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=Gp.in_to_m(25), p_y=Gp.in_to_m(-19), p_z=operation_height,
+                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
+
 gripper_center_human_right = [-0.0431328125, -0.4307822265625, 1.257787109375, 1.0017109375, -1.04582421875, 1.554017578125, 2.63585546875]
-camera_center_human_left = [-1.228408203125, -0.76178125, 1.41880078125, 1.932666015625, -0.8717197265625, 1.20846875, 2.2628583984375]
+# x = 36 inch, y = 18 inch
+camera_center_human_left = Gp.ik_service_client(limb='right', use_advanced_options=True,
+                                          p_x=Gp.in_to_m(25), p_y=Gp.in_to_m(19), p_z=operation_height,
+                                          q_x=dQ[0], q_y=dQ[1], q_z=dQ[2], q_w=dQ[3])
 gripper_center_human_left = [-1.1013798828125, -0.66011328125, 1.33263671875, 1.671609375, -0.9153974609375, 1.3138095703125, 2.148287109375]
 
 moveComm = Gp.moveit_commander

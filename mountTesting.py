@@ -71,7 +71,7 @@ number_of_blocks_left = 0
 block_index = 0
 
 # false indicates pickup location is on the left and true is right
-temp_workspace = False
+temp_workspace = True
 iterations = 1  # how many times does the robot have to repeatedly grab the blocks
 
 while iterations != 0:
@@ -88,13 +88,13 @@ while iterations != 0:
 
     # Looking for the block
     square_list = None
-
+    #Use Gp.take_picture(0, 30) for webcam and Gp.get_video() for Kinect. Make sure to replace all 4 instances
     timeout = 0
     while square_list is None:
         if timeout > 10:
             rospy.logerr("No block exists in the frame. Returning to initial position")
             exit()
-        img = Gp.take_picture(0, 30)
+        img = Gp.get_video()
         square_list = iH.square_img_to_centers_list(img, temp_workspace)
         number_of_blocks_left = len(square_list)
         timeout += 1
@@ -115,8 +115,17 @@ while iterations != 0:
     Gp.move_move(limb, group, moveJoint)
 
     # Retake image about the block for recognition
-    img = Gp.take_picture(0, 30)
+    img = Gp.get_video()
     square_list = iH.square_img_to_centers_list(img, temp_workspace)
+
+    timeout = 0
+    while square_list is None:
+        if timeout > 20:
+            rospy.logerr("No block exists in the frame. Returning to initial position")
+            exit()
+        img = Gp.get_video()
+        square_list = iH.square_img_to_centers_list(img, temp_workspace)
+        timeout += 1
 
     square_to_find = iH.find_square_closest_to_center(img, square_list)
 
@@ -134,7 +143,7 @@ while iterations != 0:
     Gp.move_move(limb, group, pre_drop_pos)
     rospy.sleep(1)
 
-    img = Gp.take_picture(0, 30)
+    img = Gp.get_video()
     drop_off_location = iH.get_marked_location(img, temp_workspace)
 
 
@@ -145,10 +154,11 @@ while iterations != 0:
     Gp.dropBlockByImageExecute(limb, gripper, W, H, Ang, worldVec[0], worldVec[1], 1, group, temp_workspace)
 
     # While loop recur
-    temp_workspace = not temp_workspace
+    # temp_workspace = not temp_workspace
     # cv2.destroyAllWindows()
     iterations -= 1
+    # cv2.waitKey()
     print "Please measure the offsets, press any key when done"
-    cv2.waitKey()
+
 
 print "Task completed"
